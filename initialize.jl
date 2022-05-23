@@ -35,5 +35,9 @@ using PyPlot
 using QuadGK
 using LinearAlgebra
 using Statistics
+using IterativeSolvers
+using LinearMaps
 
 nrun = [0] # run counter initialization
+
+println("-Settings initialized and base packages loaded.\n-Today's folder created:\n-$(newdir)\n-Initialized run counter: nrun=$(nrun[1]).")

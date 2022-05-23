@@ -1,35 +1,35 @@
 # Subroutines for support of CTRvsIBIM for Poisson-Boltzmann
 
 # standalone kernels (kappa=0 -> Laplace)
-Gk_PB(x,y,kappa) = exp(-kappa*norm(x-y))/(4*pi*norm(x-y))
-dGkdnx(x,y,nx,kappa) = -exp(-kappa*norm(x-y))*(1+kappa*norm(x-y))*dot(x-y,nx)/(4*pi*norm(x-y)^3)
-dGkdny(x,y,ny,kappa) = exp(-kappa*norm(x-y))*(1+kappa*norm(x-y))*dot(x-y,ny)/(4*pi*norm(x-y)^3)
+Gk_PB(x,y,kappa) = exp(-kappa*norm(x.-y))/(4*pi*norm(x.-y))
+dGkdnx(x,y,nx,kappa) = -exp(-kappa*norm(x.-y))*(1+kappa*norm(x.-y))*dot(x.-y,nx)/(4*pi*norm(x.-y)^3)
+dGkdny(x,y,ny,kappa) = exp(-kappa*norm(x.-y))*(1+kappa*norm(x.-y))*dot(x.-y,ny)/(4*pi*norm(x.-y)^3)
 
-d2Gkdnxdny(x,y,nx,ny,kappa) = exp(-kappa*norm(x-y))*(1+kappa*norm(x-y))*(dot(nx,ny)-3*dot(x-y,nx)*dot(x-y,ny)/norm(x-y)^2)/(4*pi*norm(x-y)^3) -kappa^2*exp(-kappa*norm(x-y))*dot(x-y,nx)*dot(x-y,ny)/(4*pi*norm(x-y)^3)
+d2Gkdnxdny(x,y,nx,ny,kappa) = exp(-kappa*norm(x.-y))*(1+kappa*norm(x.-y))*(dot(nx,ny)-3*dot(x.-y,nx)*dot(x.-y,ny)/norm(x.-y)^2)/(4*pi*norm(x.-y)^3) -kappa^2*exp(-kappa*norm(x.-y))*dot(x.-y,nx)*dot(x.-y,ny)/(4*pi*norm(x.-y)^3)
 
 # kernel differences as they appear in the formulations
 
 # difference dG0dnx - theta dGkdnx
-dGnx_diff(x,y,nx,kappa,theta) = (1-theta*exp(-kappa*norm(x-y))*(1+kappa*norm(x-y)))*(dot(y-x,nx)/norm(x-y)^3)/(4*pi) # notice (y-x) inside the dot, to get the minus sign
+dGnx_diff(x,y,nx,kappa,theta) = (1-theta*exp(-kappa*norm(x.-y))*(1+kappa*norm(x.-y)))*(dot(y.-x,nx)/norm(x.-y)^3)/(4*pi) # notice (y-x) inside the dot, to get the minus sign
 # usually theta = epsI/epsE
 
 # difference dG0dny - theta dGkdny
-dGny_diff(x,y,ny,kappa,theta) = (1-theta*exp(-kappa*norm(x-y))*(1+kappa*norm(x-y)))*(dot(x-y,ny)/norm(x-y)^3)/(4*pi) # notice (x-y) inside the dot, to retain the plus sign in constrast with the other kernel
+dGny_diff(x,y,ny,kappa,theta) = (1-theta*exp(-kappa*norm(x.-y))*(1+kappa*norm(x.-y)))*(dot(x.-y,ny)/norm(x.-y)^3)/(4*pi) # notice (x-y) inside the dot, to retain the plus sign in constrast with the other kernel
 # usually theta = epsE/epsI
 
 # difference G0 - Gk
-G0Gk(x,y,kappa) = (1-exp(-kappa*norm(x-y)))/(4*pi*norm(x-y))
+G0Gk(x,y,kappa) = (1-exp(-kappa*norm(x.-y)))/(4*pi*norm(x.-y))
 
 # difference d2G0dnxdny - d2Gkdnydny, which is integrable
-d2G_diff(x,y,nx,ny,kappa) = (dot(nx,ny)-3*dot(x-y,nx)*dot(x-y,ny)/norm(x-y)^2)*(1-(1+kappa*norm(x-y))*exp(-kappa*norm(x-y)))/(4*pi*norm(x-y)^3) - kappa^2*exp(-kappa*norm(x-y))*dot(x-y,nx)*dot(x-y,ny)/(4*pi*norm(x-y)^3)
+d2G_diff(x,y,nx,ny,kappa) = (dot(nx,ny)-3*dot(x.-y,nx)*dot(x.-y,ny)/norm(x.-y)^2)*(1-(1+kappa*norm(x.-y))*exp(-kappa*norm(x.-y)))/(4*pi*norm(x.-y)^3) - kappa^2*exp(-kappa*norm(x.-y))*dot(x.-y,nx)*dot(x.-y,ny)/(4*pi*norm(x.-y)^3)
 
 # IBIM regularizations
 
-K22_PB(x,y,nx,kappa,theta,tau) = (norm(x-y)>=tau)*dGnx_diff(x,y,nx,kappa,theta)
-K21_PB(x,y,nx,ny,kappa,tau) = (norm(x-y)>=tau)*d2G_diff(x,y,nx,ny,kappa)
+K22_PB(x,y,nx,kappa,theta,tau) = (norm(x.-y)>=tau)*dGnx_diff(x,y,nx,kappa,theta)
+K21_PB(x,y,nx,ny,kappa,tau) = (norm(x.-y)>=tau)*d2G_diff(x,y,nx,ny,kappa)
 
-K11_PB(x,y,ny,kappa,theta,tau) = (norm(x-y)>=tau)*dGny_diff(x,y,ny,kappa,theta)
-K12_PB(x,y,kappa,tau) = (norm(x-y)>=tau)*G0Gk(x,y,kappa) + (norm(x-y)<tau)*(exp(-kappa*tau)-1+kappa*tau)/(2*pi*kappa*tau^2)
+K11_PB(x,y,ny,kappa,theta,tau) = (norm(x.-y)>=tau)*dGny_diff(x,y,ny,kappa,theta)
+K12_PB(x,y,kappa,tau) = (norm(x.-y)>=tau)*G0Gk(x,y,kappa) + (norm(x.-y)<tau)*(exp(-kappa*tau)-1+kappa*tau)/(2*pi*kappa*tau^2)
 
 # solution ψ* to the Single Ion Problem (sphere of radius r):
 ψ_SIP(q,r,kappa,epsE) = q/(4*pi*epsE*(1+kappa*r)*r)
@@ -42,8 +42,8 @@ K12_PB(x,y,kappa,tau) = (norm(x-y)>=tau)*G0Gk(x,y,kappa) + (norm(x-y)<tau)*(exp(
 # expansions
 
 # two terms in the difference of the hypersingular kernels
-F1_PB(x,y,nx,ny,k) = (dot(nx,ny)-3( dot(x-y,nx)*dot(x-y,ny)/(norm(x-y)^2) ))*(1-exp(-k*norm(x-y))-k*norm(x-y)*exp(-k*norm(x-y)))/(norm(x-y)^3);
-F2_PB(x,y,nx,ny,k) = exp(-k*norm(x-y))*dot(x-y,nx)*dot(x-y,ny)/(norm(x-y)^3);
+F1_PB(x,y,nx,ny,k) = (dot(nx,ny)-3( dot(x.-y,nx)*dot(x.-y,ny)/(norm(x.-y)^2) ))*(1-exp(-k*norm(x.-y))-k*norm(x.-y)*exp(-k*norm(x.-y)))/(norm(x.-y)^3);
+F2_PB(x,y,nx,ny,k) = exp(-k*norm(x.-y))*dot(x.-y,nx)*dot(x.-y,ny)/(norm(x.-y)^3);
 
 Bfun_PB(x,v) = 0.5*(v[1]*x[1]^3/3+v[4]*x[2]^3/3+v[2]*x[1]^2*x[2]+v[3]*x[1]*x[2]^2)
 Cfun_PB(x,v) = 0.5*[v[1]*x[1]^2+2*v[2]*x[1]*x[2]+v[3]*x[2]^2; v[4]*x[2]^2+2*v[3]*x[1]*x[2]+v[2]*x[1]^2]
@@ -95,6 +95,9 @@ j0_PB(x,D0,Amat,Mmat,ep) = (1-ep)*b1_PB(x,D0,Amat,Mmat)/ψ0_PB(x,D0,Amat)^2
 j0_PB_a(x,D0,Amat,Mmat,ep) = j0_PB([cos(x);sin(x)],D0,Amat,Mmat,ep)
 j1_PB(x,D0,Amat,dvec,Mmat,z,v,ep) = ((1-ep)*b2_PB(x,D0,Amat,dvec,Mmat,z,v))/ψ0_PB(x,D0,Amat)^2 -2(1-ep)b1_PB(x,D0,Amat,Mmat)*ψ1_PB(x,D0,Amat,dvec,Mmat,z,v)/ψ0_PB(x,D0,Amat)^3
 j1_PB_a(x,D0,Amat,dvec,Mmat,z,v,ep) = j1_PB([cos(x);sin(x)],D0,Amat,dvec,Mmat,z,v,ep)
+
+# simplified function for i0 and j0: note that the (1-ep) is not included in this expression
+ij0_PB_a(x,D0,Amat,Mmat) = 0.5*(dot(D0*Amat*[cos(x);sin(x)], Mmat*D0*Amat*[cos(x);sin(x)]))/(norm(D0*Amat*[cos(x);sin(x)])^3)
 
 # (1-exp(-k|x-y|))/|x-y| = ell0 + ell1 |y| + ...
 ℓ0_PB(k) = k
@@ -398,6 +401,8 @@ function Pgamma_circle(x,R,x0)
   return (norm(x.-x0)>1e-3)*((x.-x0)*R/norm(x.-x0).+x0) + (norm(x.-x0)<=1e-3)*(x0 .+ R*x0/norm(x0))
 end
 
+# functions for CPM onto two touching spheres
+
 function isInTriangle(p1,p2,p3,x)
   v = [p1[1]-p3[1] p2[1]-p3[1];p1[2]-p3[2] p2[2]-p3[2]]\[x[1]-p3[1];x[2]-p3[2]];
   return ((v[1]>=0) && (v[2]>=0) && ((v[1]+v[2])<=1))
@@ -684,6 +689,29 @@ function far_outsidepoint_spheres(z)
       return (norm(z-pz1)<norm(z-pz2))*(norm(z-v)>Rvec[1]+ε) .+ (norm(z-pz1)>=norm(z-pz2))*(norm(z-w)>Rvec[2]+ε)
   end
 end
+
+# functions for CPM onto single sphere
+
+function Pgammafun_sphere(z,x0,R)
+  return (norm(z-x0)>1e-8)*((z-x0)/norm(z-x0)*R+x0) + (norm(z-x0)<=1e-8)*(x0+R*[0.;0;1.]);
+end
+function normalz_sphere(z,x0,R)
+  z = Pgammafun_sphere(z,x0,R);
+  return (norm(z-x0)>1e-8)*((z-x0)/norm(z-x0)) + (norm(z-x0)<=1e-8)*([0;0;1.]);
+end
+function insidepoint_sphere(z,x0,R)
+  z = Pgammafun_sphere(z,x0,R)
+  return norm(z-x0)<R
+end
+function far_insidepoint_sphere(z,x0,R,ε)
+  z = Pgammafun_sphere(z,x0,R)
+  return norm(z-x0)<R-ε
+end
+function far_outsidepoint_sphere(z,x0,R,ε)
+  z = Pgammafun_sphere(z,x0,R)
+  return norm(z-x0)>R+ε
+end
+
 
 #########################
 # weight computation functions
@@ -1341,7 +1369,7 @@ function genCPM_corr_V2_PB( Pgammafun::Function, insidepoint::Function, far_insi
     w_K11_single_t = [ -ones(Float64,M_int) for i=1:M_t ] # for every target, weights for every correction needed; 1 weight because single correction
     w_K22_single_t = [ -ones(Float64,M_int) for i=1:M_t ] # for every target, weights for every correction needed; 1 weight because single correction
     w_K21_single_t = [ -ones(Float64,M_int) for i=1:M_t ] # for every target, weights for every correction needed; 1 weight because single correction
-    w_K12_single_t = [ -ones(Float64,M_int) for i=1:M_t ] # for every target, weights for every correction needed; 1 weight because single correction
+    # w_K12_single_t = [ -ones(Float64,M_int) for i=1:M_t ] # for every target, weights for every correction needed; 1 weight because single correction
       
     eta_vec = [ zeros(Float64,M_int) for i=1:M_t ] # only need it in this function
 
@@ -1494,7 +1522,7 @@ function genCPM_corr_V2_PB( Pgammafun::Function, insidepoint::Function, far_insi
           w_K11_single_t[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->i0_PB_a(t,D0_now,Amat, Mmat, epsl_ratio)))*secondt_const
           w_K22_single_t[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->j0_PB_a(t,D0_now,Amat, Mmat, 1/epsl_ratio)))*(-secondt_const)
           w_K21_single_t[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->1.0./ψ0_PB_a(t,D0_now,Amat)))*(secondt_const)*0.5*kappa_val^2
-          w_K12_single_t[ m ][ itmp ] = secondt_const*kappa_val # weight is always one
+          # w_K12_single_t[ m ][ itmp ] = secondt_const*kappa_val # weight is always one
           # technically useless array
       end
       
@@ -1506,7 +1534,7 @@ function genCPM_corr_V2_PB( Pgammafun::Function, insidepoint::Function, far_insi
       
       w_K11_single_t[ m ] = (w_K11_single_t[ m ])[p1tmp]
       w_K22_single_t[ m ] = (w_K22_single_t[ m ])[p1tmp]
-      w_K12_single_t[ m ] = (w_K12_single_t[ m ])[p1tmp]
+      # w_K12_single_t[ m ] = (w_K12_single_t[ m ])[p1tmp]
       w_K21_single_t[ m ] = (w_K21_single_t[ m ])[p1tmp]
 
     end
@@ -1517,7 +1545,497 @@ function genCPM_corr_V2_PB( Pgammafun::Function, insidepoint::Function, far_insi
   println("--- Precomputations over ---")
 
   return M, Pg, PΓ, indIJK_to_M, indM_to_IJK, dsignes, ab_single_t,
-  iv1_t, w_K11_single_t, w_K22_single_t, w_K21_single_t, w_K12_single_t, target_normal
+  iv1_t, w_K11_single_t, w_K22_single_t, w_K21_single_t, target_normal
+end
+
+function genCPM_corr_PB_system( Pgammafun::Function, insidepoint::Function, far_insidepoint::Function, far_outsidepoint::Function, X::Array{Float64,1}, Y::Array{Float64,1}, Z::Array{Float64,1}, Nvec::Array{Int,1}, epsl::Real, h::Real; outflag::Bool=true, surfTargetXYZ=[[1;0;0]], epsl_ratio::Real=1.0, kappa_val::Real=1.0 )
+
+  secondt_const = 0.25/pi
+
+  @time begin
+    # inside or outside in the sense: exterior or interior domains are considered; nodes far enough away are considered, so no singularity or near singularity for solution evaluation
+
+    insidefun(z) = true;
+    if outflag
+      insidefun = far_outsidepoint
+    else
+      insidefun = far_insidepoint
+    end
+
+    Nx, Ny, Nz = Nvec
+    M_t = length(surfTargetXYZ)
+
+    indIJK_to_M = -ones(Int64,Nx,Ny,Nz); # to go from ijk to m-index; initialized as -1
+    Pg = Array{Float64,4}(undef,Nx,Ny,Nz,3) # 3D projection array for every index i,j,k,1:3 for each component
+    dsignes = Array{Float64,3}(undef,Nx,Ny,Nz) # for every index ijk, signed distance (for curvature)
+    Mtemp = Int(ceil(4.4*Nx^2.9/5)); # initialization size for how many interior points to the domain
+    
+    PΓ = Array{Array{Float64,1},1}(undef,Mtemp) # projection mapping for m-indices
+    indM_to_IJK = zeros(Int64,Mtemp,3); # indices from m to ijk
+    # d = Array{Float64,1}(undef,Mtemp) # unsigned distance, m-indices
+    # ds = Array{Float64,1}(undef,Mtemp) # signed distance, m-indices
+    
+    m=0;
+    for i=1:Nx
+      for j=1:Ny
+        for k=1:Nz # a->R2, b->R1
+          zpt = [X[i];Y[j];Z[k]] # given node
+          Pzpt = Pgammafun(zpt)
+          Pg[i,j,k,:] = Pzpt # projection
+          dsignes[i,j,k] = (1-2*insidepoint(zpt))*norm(Pzpt-zpt) # signed distance
+          if ( norm(zpt-Pzpt) < epsl )
+            m += 1; # inner node counter
+            indIJK_to_M[i,j,k] = m; # node inside the tubular neighborhood
+            indM_to_IJK[m,:] = [i;j;k];
+            PΓ[m] = Pzpt
+            # d[m] = norm(zpt-Pzpt)
+            # ds[m] = dsignes[i,j,k]
+          end
+        end
+      end
+    end
+
+    M = m; # finalized the correct number of interior nodes
+    # cast to the correct size
+    indM_to_IJK = indM_to_IJK[1:M,:]
+    PΓ = PΓ[1:M]
+    # d = d[1:M]
+    # ds = ds[1:M]
+  end
+
+  # here starts the correction precomputation
+  println("CPM mapping completed; interior M=$M.")
+
+  # println( "Size of arrays to use (bytes):" )
+  # println( "                           Pg: ",sizeof( Pg ) )
+  # println( "                           PΓ: ",sizeof( PΓ ) )
+  # println( "                  indIJK_to_M: ",sizeof( indIJK_to_M ) )
+  # println( "                  indM_to_IJK: ",sizeof( indM_to_IJK ) )
+  # println( "                      dsignes: ",sizeof( dsignes ) )
+
+  begin
+    M_int = Int(ceil(4*epsl/h))
+
+    # _t is because it's for specifit targets, not for solving the general problem
+    # for every target, an array of couples (α,β) is considered (initialized size M_int), corresponding to all the nodes to correct
+    ab_single = [ zeros(Float64,2) for i=1:M, j=1:M_int ] # couples -1/2≦(α,β)≦1/2 for single correction
+    iv1 = [ -ones(Int64,M_int) for i=1:M ] # m-indices of the closest node needed for correction 
+  
+    w_K11_single = [ -ones(Float64,M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
+    w_K22_single = [ -ones(Float64,M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
+    w_K21_single = [ -ones(Float64,M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
+    # w_K12_single_t = [ -ones(Float64,M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
+      
+    eta_vec = [ zeros(Float64,M_int) for i=1:M ] # only need it in this function
+
+    normal = [ zeros(3) for i=1:M]
+  end
+  println("Initialization of correction arrays completed. Number of nodes M=$M.")
+
+  # println( "Size of arrays to use (bytes):" )
+  # println( "                  ab_single_t: ",sizeof( ab_single_t ) )
+  # println( "                        iv1: ",sizeof( iv1 ) )
+  # println( "               w_K11_single: ",sizeof( w_K11_single ) )
+  # println( "               w_K22_single: ",sizeof( w_K22_single ) )
+  # println( "               w_K21_single: ",sizeof( w_K21_single ) )
+  # println( "               w_K12_single_t: ",sizeof( w_K12_single_t ) )
+
+  @time begin
+    for m = 1:M # one for every node
+      x_t, y_t, z_t = PΓ[m]
+      zpt = [x_t;y_t;z_t]
+
+      i0,j0,k0 = indM_to_IJK[m,:]
+      zptP = [X[i0];Y[j0];Z[k0]]
+
+      Pzpt = zpt
+      sign_now = (1-2*insidepoint(zpt))
+      dszpt = sign_now*norm(Pzpt-zpt) # signed distance
+
+      # initialization of permuation of zpt, Pzpt
+      Permzpt = zeros(3); Permzpt .= Pzpt
+
+      #### calculating the curvatures and principal directions on the surface using the signed distance function (specifically its  Hessian, approximated with 2nd order in h)
+
+      # build Hessian from scratch for target points:
+      # htmp = h
+      # Np = 4
+      # Mtmp2 = zeros(2Np+1,2Np+1,2Np+1)
+      # dsignes_loc = zeros(2Np+1,2Np+1,2Np+1)
+      # for itmp=1:2Np+1
+      #   for jtmp=1:2Np+1
+      #     for ktmp=1:2Np+1
+      #       zpttmp = zpt .+ htmp*[itmp-Np-1;jtmp-Np-1;ktmp-Np-1] # discretization grid centered in zpt
+      #       Pzpttmp = Pgammafun(zpttmp)
+      #       dsignes_loc[itmp,jtmp,ktmp] = (1-2*insidepoint(zpttmp))*norm(Pzpttmp-zpttmp)
+      #       Mtmp2[itmp,jtmp,ktmp] = (1-2*insidepoint(zpttmp))*norm(Pzpttmp-zpttmp) # signed distance
+      #     end
+      #   end
+      # end
+      
+      # iind, i1 = get_indices_b(dsignes_loc[(Np-1):(Np+3),Np+1,Np+1]) # potentially one-sided 2nd order finite differences
+      # jind, j1 = get_indices_b(dsignes_loc[Np+1,(Np-1):(Np+3),Np+1])
+      # kind, k1 = get_indices_b(dsignes_loc[Np+1,Np+1,(Np-1):(Np+3)])
+      # norm_now = [dot(dsignes_loc[iind.+(Np+1),Np+1,Np+1],i1); dot(dsignes_loc[Np+1,jind.+(Np+1),Np+1],j1);dot(dsignes_loc[Np+1,Np+1,kind.+(Np+1)],k1)]/h
+      # norm_now /= norm(norm_now)
+      # normal[m] = norm_now # normal found via gradient of signed distance function
+
+      # Jm = hessian3D_2nd(Mtmp2[(Np):(Np+2),(Np):(Np+2),(Np):(Np+2)], htmp, htmp, htmp) # from 
+      
+      #### Attention: only works if target is one of the grid nodes.
+      i_now, j_now, k_now = indM_to_IJK[m,:] # only works if target is one of the grid nodes.
+      Jm = hessian3D_2nd( dsignes[i_now-1:i_now+1, j_now-1:j_now+1, k_now-1:k_now+1], h, h, h);
+
+      iind, i1 = get_indices_b(dsignes[i_now-2:i_now+2,j_now,k_now]) # potentially one-sided 2nd order finite differences
+      jind, j1 = get_indices_b(dsignes[i_now,j_now-2:j_now+2,k_now])
+      kind, k1 = get_indices_b(dsignes[i_now,j_now,k_now-2:k_now+2])
+      norm_now = [dot(dsignes[i_now.+iind,j_now,k_now],i1); dot(dsignes[i_now,j_now.+jind,k_now],j1);dot(dsignes[i_now,j_now,k_now.+kind],k1)]/h
+      norm_now /= norm(norm_now)
+      normal[m] = norm_now # normal found via gradient of signed distance function
+      #### Attention end
+
+      eigvalF, eigvecF = eigen(Jm);
+      eigvp = sortperm(abs.(eigvalF))[3:-1:1]
+      # find first principal direction
+      tau1 = eigvecF[:,eigvp[1]]; tau1 /= norm(tau1) # normalization
+      # find second principal direction by using the normal
+      tau2 = cross(norm_now, tau1); tau2 /= norm(tau2)
+      k1_now = -eigvalF[eigvp[1]] # first eigenvalue (from the formula it comes with opposite sign)
+      k2_now = -eigvalF[eigvp[2]] # second eigenvalue, second largest. If it's smaller in absolute value than 0 eigenvalue corresponding to the normal direction, still fine, still zero.
+
+      # k1_now and k2_now are the principal curvatures on the parallel surface, and tau1, tau2 are the principal directions so that the coordinate system on the surface is (tau1, tau2, norm_now)
+
+      # transform the curvatures from the parallel surface to the original surface (zero level set)
+      k1_now /= (1+dszpt*k1_now)
+      k2_now /= (1+dszpt*k2_now)
+
+      Mmat = [k1_now 0;0 k2_now] # M matrix from (3.25) in https://arxiv.org/abs/2203.04854
+      D0(z) = [1/(1-k1_now*z) 0;0 1/(1-k2_now*z)] # matrix D_0 at the beginning of page 23
+
+      Nmax = maximum(Nvec);
+      W1 = zeros(Nmax); W2 = zeros(Nmax); W3 = zeros(Nmax)
+      W1[1:Nx] .= X; W2[1:Ny] .= Y; W3[1:Nz] .= Z; # initialization: coord. system (x,y,z), no permutation
+      
+      theta = acos(round(norm_now[3]/norm(norm_now),digits=13)) # theta,phi directions of the normal, singularity line
+      phi = atan( norm_now[2], norm_now[1] )
+      sqrt2 = sqrt(2); pb = [1;2;3]; pf = [1;2;3]
+      e1 = [1;0;0]; e2 = [0;1;0]; e3 = [0;0;1] # initialized coord system versors
+      e1_now = [0;0;0]; e2_now = [0;0;0]; e3_now = [0;0;0];
+      
+      if ( (abs(tan(theta)) >= sqrt2 ) && (abs(tan(phi)))>1-1e-8 ) # new coordinate systems if normal is too tilted; angles are updated
+        pb .= [2;3;1]; pf .= [3;1;2]
+        theta = acos( norm_now[pf[3]]/norm(norm_now) );
+        phi = ( abs(theta%(π))>1e-6 && abs(theta%(π))<(π-1e-6) )*atan( norm_now[pf[2]], norm_now[pf[1]] )
+        W1[1:Nz] .= Z; W2[1:Nx] .= X; W3[1:Ny] .= Y;
+      elseif ( (abs(tan(theta)) >= sqrt2 ) && ( abs(tan(phi))<1 ) )
+        pb .= [3;1;2]; pf .= [2;3;1]
+        theta = acos( norm_now[pf[3]]/norm(norm_now) );
+        phi = (abs(theta%(π))>1e-6 && abs(theta%(π))<(π-1e-6))*atan( norm_now[pf[2]], norm_now[pf[1]] )
+        W1[1:Ny] .= Y; W2[1:Nz] .= Z; W3[1:Nx] .= X;
+      end
+      Permzpt .= Permzpt[pf];
+      zptPerm = zptP[pf];
+      Nvecp = Nvec[pf]
+      
+      e1_now .= e1[pb]; e2_now .= e2[pb]; e3_now .= e3[pb]
+      t1_tmp = tau1[pf]; t2_tmp = tau2[pf]; nvec_tmp = norm_now[pf];
+      
+      Amat = [t1_tmp[1] t1_tmp[2];t2_tmp[1] t2_tmp[2]] # matrix A  and vector d from (3.21)
+      #   dvec = [nvec_tmp[1]; nvec_tmp[2]] # not needed for single correction
+      
+      # a,b,c calculated with θn,ϕn angles of normal direction in 3D, because I need to calculate distance from a point to that line
+      ac_angle = tan(theta)*cos(phi)
+      bc_angle = tan(theta)*sin(phi) # values needed for permutated setting
+
+      # range of indices to check, so that all the nodes in the tubular neighborhood are considered
+      Mx3p = min( Nvecp[3], Int(  ceil((Permzpt[3] + epsl - W3[1])/h)))
+      Mx3m = max( 1, Int( floor((Permzpt[3] - epsl - W3[1])/h)))
+      # Mx0 = Int(  round((zptPerm[3] - W3[1])/h))
+      Mx0 = ([i0;j0;k0])[pf[3]]
+      # if ((Mx0>Mx3p) && (Mx0<Mx3m))
+        # println("Mx0=$Mx0, between $(Mx3m)-$(Mx3p)")
+      # end
+
+      indIm = setdiff(Mx3m:Mx3p, Mx0) # range of indices in z-direction (after permutation)
+      indIc = 1:length(indIm) # how many indices in total, from 1 to ...
+
+      # intersection of line with planes in permutated basis
+      Int_zpt = [ [ac_angle*( W3[im]-Permzpt[3])+Permzpt[1]; bc_angle*(W3[im]-Permzpt[3])+Permzpt[2]; W3[im]] for im in indIm ]
+      # Int_zpt = [Int_zpt; [zptPerm] ]
+
+      # indices corresponding to (bottom left) closest grid node to the intersection
+      Indint_p = [ [Int(floor((Int_zpt[im][1]-W1[1])/h))+1; Int(floor((Int_zpt[im][2]-W2[1])/h))+1; indIm[im] ] for im in indIc ]
+
+      # α,β for bottom left closest grid node
+      tmp1 = [ [( Int_zpt[im][1] - ((Indint_p[im][1]-1)*h + W1[1]) )/h; ( Int_zpt[im][2] - ((Indint_p[im][2]-1)*h + W2[1]) )/h] for im in indIc ]
+      
+      # indices (only first two) corresponding to (actual) closest point to  to intersection
+      Indint_p_w1 = [ [Indint_p[im][1]+(tmp1[im][1]>0.5); Indint_p[im][2]+(tmp1[im][2]>0.5)] for im in indIc ]
+    
+      # α,β for closest grid node
+      ab_single[m, indIc] = [ [( Int_zpt[im][1] - ((Indint_p_w1[im][1]-1)*h + W1[1]) )/h; ( Int_zpt[im][2] - ((Indint_p_w1[im][2]-1)*h + W2[1]) )/h] for im in indIc ]
+      # ab_single[m, length(indIc)+1] = [0;0.]
+
+      # 3D indices of single correction nodes, correctly permutated to standard xyz system (pb, backward)
+      Ind_tmp = [ ([ Indint_p_w1[im][1]; Indint_p_w1[im][2]; Indint_p[im][3] ])[pb] for im in indIc ]
+      # third is from Indint_p, because the third is not saved into Indint_p_w1
+
+      # 1D array of subindices of indIc for which the indices of the corr. nodes are not out of bounds, important for not passing bad values to indIJK_to_M
+      ind_check = indIc[ [ prod( (ind_tmp.<=Nvec) .& (ind_tmp.>=1) ) for ind_tmp in Ind_tmp ].>0 ]
+
+      # 1D array of m-indices of valid correction points; indices given to indIJK_to_M to get m-index
+      (iv1[m])[ind_check] = [ indIJK_to_M[ind_tmp[1],ind_tmp[2],ind_tmp[3]] for ind_tmp in Ind_tmp[ind_check] ]
+      (iv1[m])[length(indIc)+1] = m
+
+      for itmp in ind_check # indices sets which are not out of bounds
+          η = (1-2*insidepoint((Int_zpt[itmp])[pb]))*norm(Permzpt-Int_zpt[itmp]) 
+          (eta_vec[m])[itmp] = η
+          α, β = ab_single[m, itmp]
+          D0_now = D0(η)
+
+          # weights for the different kernels
+          w_K11_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->i0_PB_a(t,D0_now,Amat, Mmat, epsl_ratio)))*secondt_const
+          w_K22_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->j0_PB_a(t,D0_now,Amat, Mmat, 1/epsl_ratio)))*(-secondt_const)
+          w_K21_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->1.0./ψ0_PB_a(t,D0_now,Amat)))*(secondt_const)*0.5*kappa_val^2
+
+          wjj_test = w_k0_ptilde1([α;β]; lfun=(t->ij0_PB_a(t,D0_now,Amat, Mmat)));
+          w11_test = wjj_test*secondt_const*(1-epsl_ratio)
+          w22_test = wjj_test*secondt_const*(1- 1/epsl_ratio)
+          w21_test = w_k0_ptilde1([α;β]; lfun=(t->1/norm(D0_now*Amat*[cos(t);sin(t)])))*secondt_const*0.5*kappa_val^2
+          errval1 = [abs(w11_test-w_K11_single[ m ][ itmp ]);abs(w22_test-w_K22_single[ m ][ itmp ]);abs(w21_test-w_K21_single[ m ][ itmp ])]
+          if ~prod(errval1 .< 1e-9)
+            println("weight errors")
+            println("0=",abs(w11_test-w_K11_single[ m ][ itmp ]))
+            println("0=",abs(w22_test-w_K22_single[ m ][ itmp ]))
+            println("0=",abs(w21_test-w_K21_single[ m ][ itmp ]))  
+          end
+          # w_K12_single_t[ m ][ itmp ] = secondt_const*kappa_val # weight is always one
+          # technically useless array
+          # ij0_PB_a(x,D0,Amat,Mmat)
+      end
+      itmp = length(indIc)+1
+      # (eta_vec[m])[itmp] = dsignes[i0,j0,k0]
+      η = dsignes[i0,j0,k0]
+      α = 0.; β = 0.;
+      D0_now = D0(η)
+      # weights for the different kernels
+      w_K11_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->i0_PB_a(t,D0_now,Amat, Mmat, epsl_ratio)))*secondt_const
+      w_K22_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->j0_PB_a(t,D0_now,Amat, Mmat, 1/epsl_ratio)))*(-secondt_const)
+      w_K21_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->1.0./ψ0_PB_a(t,D0_now,Amat)))*(secondt_const)*0.5*kappa_val^2
+
+      
+      # only keep the values corresponding to nodes inside the neighborhod
+      p1tmp = (iv1[m]) .> 0
+      iv1[m] = (iv1[m])[p1tmp]
+
+      # iv2 = (iv1[m])[1:end-1]
+      # for i=1:length(iv2)
+      #   if (iv2[i]-m==0)
+      #     println("Mx0=$Mx0, between $(Mx3m)-$(Mx3p)")
+      #     println(indIm)
+      #     println("m=$m, indices $(iv1[m])")
+      #   end
+      # end
+      
+      eta_vec[ m ] = (eta_vec[ m ])[p1tmp]     
+      
+      w_K11_single[ m ] = (w_K11_single[ m ])[p1tmp]
+      w_K22_single[ m ] = (w_K22_single[ m ])[p1tmp]
+      # w_K12_single_t[ m ] = (w_K12_single_t[ m ])[p1tmp]
+      w_K21_single[ m ] = (w_K21_single[ m ])[p1tmp]
+
+    end
+  end
+  println("Correction arrays filled - nodes")
+
+  # setup for evaluation in specific target points on the surface
+  begin
+    M_int = Int(ceil(4*epsl/h))
+
+    # _t is because it's for specifit targets, not for solving the general problem
+    # for every target, an array of couples (α,β) is considered (initialized size M_int), corresponding to all the nodes to correct
+    ab_single_t = [ zeros(Float64,2) for i=1:M_t, j=1:M_int ] # couples -1/2≦(α,β)≦1/2 for single correction
+    iv1_t = [ -ones(Int64,M_int) for i=1:M_t ] # m-indices of the closest node needed for correction 
+  
+    w_K11_single_t = [ -ones(Float64,M_int) for i=1:M_t ] # for every target, weights for every correction needed; 1 weight because single correction
+    w_K22_single_t = [ -ones(Float64,M_int) for i=1:M_t ] # for every target, weights for every correction needed; 1 weight because single correction
+    w_K21_single_t = [ -ones(Float64,M_int) for i=1:M_t ] # for every target, weights for every correction needed; 1 weight because single correction
+    # w_K12_single_t = [ -ones(Float64,M_int) for i=1:M_t ] # for every target, weights for every correction needed; 1 weight because single correction
+      
+    eta_vec = [ zeros(Float64,M_int) for i=1:M_t ] # only need it in this function
+
+    target_normal = [ zeros(3) for i=1:M_t]
+  end
+  println("Initialization of correction arrays completed. Number of target points M_t=$M_t.")
+
+  # println( "Size of arrays to use (bytes):" )
+  # println( "                  ab_single_t: ",sizeof( ab_single_t ) )
+  # println( "                        iv1_t: ",sizeof( iv1_t ) )
+  # println( "               w_K11_single_t: ",sizeof( w_K11_single_t ) )
+  # println( "               w_K22_single_t: ",sizeof( w_K22_single_t ) )
+  # println( "               w_K21_single_t: ",sizeof( w_K21_single_t ) )
+  # println( "               w_K12_single_t: ",sizeof( w_K12_single_t ) )
+
+  @time begin
+    for m = 1:M_t # one for every target
+      x_t, y_t, z_t = surfTargetXYZ[m]
+      zpt = [x_t;y_t;z_t]
+
+      Pzpt = Pgammafun(zpt)
+      sign_now = (1-2*insidepoint(zpt))
+      dszpt = sign_now*norm(Pzpt-zpt) # signed distance
+
+      # initialization of permuation of zpt, Pzpt
+      Permzpt = zeros(3); Permzpt .= Pzpt
+
+      #### calculating the curvatures and principal directions on the surface using the signed distance function (specifically its  Hessian, approximated with 2nd order in h)
+
+      # build Hessian from scratch for target points:
+      htmp = h
+      Np = 4
+      Mtmp2 = zeros(2Np+1,2Np+1,2Np+1)
+      dsignes_loc = zeros(2Np+1,2Np+1,2Np+1)
+      for itmp=1:2Np+1
+        for jtmp=1:2Np+1
+          for ktmp=1:2Np+1
+            zpttmp = zpt .+ htmp*[itmp-Np-1;jtmp-Np-1;ktmp-Np-1] # discretization grid centered in zpt
+            Pzpttmp = Pgammafun(zpttmp)
+            dsignes_loc[itmp,jtmp,ktmp] = (1-2*insidepoint(zpttmp))*norm(Pzpttmp-zpttmp)
+            Mtmp2[itmp,jtmp,ktmp] = (1-2*insidepoint(zpttmp))*norm(Pzpttmp-zpttmp) # signed distance
+          end
+        end
+      end
+      iind, i1 = get_indices_b(dsignes_loc[(Np-1):(Np+3),Np+1,Np+1]) # potentially one-sided 2nd order finite differences
+      jind, j1 = get_indices_b(dsignes_loc[Np+1,(Np-1):(Np+3),Np+1])
+      kind, k1 = get_indices_b(dsignes_loc[Np+1,Np+1,(Np-1):(Np+3)])
+      norm_now = [dot(dsignes_loc[iind.+(Np+1),Np+1,Np+1],i1); dot(dsignes_loc[Np+1,jind.+(Np+1),Np+1],j1);dot(dsignes_loc[Np+1,Np+1,kind.+(Np+1)],k1)]/h
+      norm_now /= norm(norm_now)
+      target_normal[m] = norm_now # normal found via gradient of signed distance function
+
+      Jm = hessian3D_2nd(Mtmp2[(Np):(Np+2),(Np):(Np+2),(Np):(Np+2)], htmp, htmp, htmp) # from 
+      
+      #### Attention: only works if target is one of the grid nodes.
+      # i_now, j_now, k_now = indM_to_IJK[m,:] # only works if target is one of the grid nodes.
+      # Jm = hessian3D( dsignes[i_now-2:i_now+2,j_now-2:j_now+2,k_now-2:k_now+2], dx, dy, dz);
+      #### Attention end
+
+      eigvalF, eigvecF = eigen(Jm);
+      eigvp = sortperm(abs.(eigvalF))[3:-1:1]
+      # find first principal direction
+      tau1 = eigvecF[:,eigvp[1]]; tau1 /= norm(tau1) # normalization
+      # find second principal direction by using the normal
+      tau2 = cross(norm_now, tau1); tau2 /= norm(tau2)
+      k1_now = -eigvalF[eigvp[1]] # first eigenvalue (from the formula it comes with opposite sign)
+      k2_now = -eigvalF[eigvp[2]] # second eigenvalue, second largest. If it's smaller in absolute value than 0 eigenvalue corresponding to the normal direction, still fine, still zero.
+
+      # k1_now and k2_now are the principal curvatures on the parallel surface, and tau1, tau2 are the principal directions so that the coordinate system on the surface is (tau1, tau2, norm_now)
+
+      # transform the curvatures from the parallel surface to the original surface (zero level set)
+      k1_now /= (1+dszpt*k1_now)
+      k2_now /= (1+dszpt*k2_now)
+
+      Mmat = [k1_now 0;0 k2_now] # M matrix from (3.25) in https://arxiv.org/abs/2203.04854
+      D0(z) = [1/(1-k1_now*z) 0;0 1/(1-k2_now*z)] # matrix D_0 at the beginning of page 23
+
+      Nmax = maximum(Nvec);
+      W1 = zeros(Nmax); W2 = zeros(Nmax); W3 = zeros(Nmax)
+      W1[1:Nx] .= X; W2[1:Ny] .= Y; W3[1:Nz] .= Z; # initialization: coord. system (x,y,z), no permutation
+      
+      theta = acos(round(norm_now[3]/norm(norm_now),digits=13)) # theta,phi directions of the normal, singularity line
+      phi = atan( norm_now[2], norm_now[1] )
+      sqrt2 = sqrt(2); pb = [1;2;3]; pf = [1;2;3]
+      e1 = [1;0;0]; e2 = [0;1;0]; e3 = [0;0;1] # initialized coord system versors
+      e1_now = [0;0;0]; e2_now = [0;0;0]; e3_now = [0;0;0];
+      
+      if ( (abs(tan(theta)) >= sqrt2 ) && (abs(tan(phi)))>1-1e-8 ) # new coordinate systems if normal is too tilted; angles are updated
+        pb .= [2;3;1]; pf .= [3;1;2]
+        theta = acos( norm_now[pf[3]]/norm(norm_now) );
+        phi = ( abs(theta%(π))>1e-6 && abs(theta%(π))<(π-1e-6) )*atan( norm_now[pf[2]], norm_now[pf[1]] )
+        W1[1:Nz] .= Z; W2[1:Nx] .= X; W3[1:Ny] .= Y;
+      elseif ( (abs(tan(theta)) >= sqrt2 ) && ( abs(tan(phi))<1 ) )
+        pb .= [3;1;2]; pf .= [2;3;1]
+        theta = acos( norm_now[pf[3]]/norm(norm_now) );
+        phi = (abs(theta%(π))>1e-6 && abs(theta%(π))<(π-1e-6))*atan( norm_now[pf[2]], norm_now[pf[1]] )
+        W1[1:Ny] .= Y; W2[1:Nz] .= Z; W3[1:Nx] .= X;
+      end
+      Permzpt .= Permzpt[pf];
+      Nvecp = Nvec[pf]
+      
+      e1_now .= e1[pb]; e2_now .= e2[pb]; e3_now .= e3[pb]
+      e1_tmp = e1_now[pf]; e2_tmp = e2_now[pf]; nvec_tmp = norm_now[pf];
+      
+      Amat = [e1_tmp[1] e1_tmp[2];e2_tmp[1] e2_tmp[2]] # matrix A  and vector d from (3.21)
+    #   dvec = [nvec_tmp[1]; nvec_tmp[2]] # not needed for single correction
+      
+      # a,b,c calculated with θn,ϕn angles of normal direction in 3D, because I need to calculate distance from a point to that line
+      ac_angle = tan(theta)*cos(phi)
+      bc_angle = tan(theta)*sin(phi) # values needed for permutated setting
+
+      # range of indices to check, so that all the nodes in the tubular neighborhood are considered
+      Mx3p = min( Nvecp[3], Int(  ceil((Permzpt[3] + epsl - W3[1])/h)))
+      Mx3m = max( 1, Int( floor((Permzpt[3] - epsl - W3[1])/h)))
+      
+      indIm = Mx3m:Mx3p # range of indices in z-direction (after permutation)
+      indIc = 1:length(indIm) # how many indices in total, from 1 to ...
+
+      # intersection of line with planes in permutated basis
+      Int_zpt = [ [ac_angle*( W3[im]-Permzpt[3])+Permzpt[1]; bc_angle*(W3[im]-Permzpt[3])+Permzpt[2]; W3[im]] for im in indIm ]
+
+      # indices corresponding to (bottom left) closest grid node to the intersection
+      Indint_p = [ [Int(floor((Int_zpt[im][1]-W1[1])/h))+1; Int(floor((Int_zpt[im][2]-W2[1])/h))+1; indIm[im] ] for im in indIc ]
+
+      # α,β for bottom left closest grid node
+      tmp1 = [ [( Int_zpt[im][1] - ((Indint_p[im][1]-1)*h + W1[1]) )/h; ( Int_zpt[im][2] - ((Indint_p[im][2]-1)*h + W2[1]) )/h] for im in indIc ]
+      
+      # indices (only first two) corresponding to (actual) closest point to  to intersection
+      Indint_p_w1 = [ [Indint_p[im][1]+(tmp1[im][1]>0.5); Indint_p[im][2]+(tmp1[im][2]>0.5)] for im in indIc ]
+    
+      # α,β for closest grid node
+      ab_single_t[m, indIc] = [ [( Int_zpt[im][1] - ((Indint_p_w1[im][1]-1)*h + W1[1]) )/h; ( Int_zpt[im][2] - ((Indint_p_w1[im][2]-1)*h + W2[1]) )/h] for im in indIc ]
+
+      # 3D indices of single correction nodes, correctly permutated to standard xyz system (pb, backward)
+      Ind_tmp = [ ([ Indint_p_w1[im][1]; Indint_p_w1[im][2]; Indint_p[im][3] ])[pb] for im in indIc ]
+      # third is from Indint_p, because the third is not saved into Indint_p_w1
+
+      # 1D array of subindices of indIc for which the indices of the corr. nodes are not out of bounds, important for not passing bad values to indIJK_to_M
+      ind_check = indIc[ [ prod( (ind_tmp.<=Nvec) .& (ind_tmp.>=1) ) for ind_tmp in Ind_tmp ].>0 ]
+
+      # 1D array of m-indices of valid correction points; indices given to indIJK_to_M to get m-index
+      (iv1_t[m])[ind_check] = [ indIJK_to_M[ind_tmp[1],ind_tmp[2],ind_tmp[3]] for ind_tmp in Ind_tmp[ind_check] ]
+
+      for itmp in ind_check # indices sets which are not out of bounds
+          η = (1-2*insidepoint((Int_zpt[itmp])[pb]))*norm(Permzpt-Int_zpt[itmp]) 
+          (eta_vec[m])[itmp] = η
+          α, β = ab_single_t[m, itmp]
+          D0_now = D0(η)
+
+          # weights for the different kernels
+          w_K11_single_t[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->i0_PB_a(t,D0_now,Amat, Mmat, epsl_ratio)))*secondt_const
+          w_K22_single_t[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->j0_PB_a(t,D0_now,Amat, Mmat, 1/epsl_ratio)))*(-secondt_const)
+          w_K21_single_t[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->1.0./ψ0_PB_a(t,D0_now,Amat)))*(secondt_const)*0.5*kappa_val^2
+          # w_K12_single_t[ m ][ itmp ] = secondt_const*kappa_val # weight is always one
+          # technically useless array
+      end
+      
+      # only keep the values corresponding to nodes inside the neighborhod
+      p1tmp = (iv1_t[m]) .> 0
+      iv1_t[m] = (iv1_t[m])[p1tmp]
+      
+      eta_vec[ m ] = (eta_vec[ m ])[p1tmp]     
+      
+      w_K11_single_t[ m ] = (w_K11_single_t[ m ])[p1tmp]
+      w_K22_single_t[ m ] = (w_K22_single_t[ m ])[p1tmp]
+      # w_K12_single_t[ m ] = (w_K12_single_t[ m ])[p1tmp]
+      w_K21_single_t[ m ] = (w_K21_single_t[ m ])[p1tmp]
+
+    end
+  end
+  println("Correction arrays filled - targets")
+  # println("Only targets considered")
+
+  println("--- Precomputations over ---")
+
+  return M, Pg, PΓ, indIJK_to_M, indM_to_IJK, dsignes, iv1, w_K11_single, w_K22_single, w_K21_single, normal, iv1_t, w_K11_single_t, w_K22_single_t, w_K21_single_t, target_normal
 end
 
 #########################################################
@@ -1568,6 +2086,40 @@ end
 K11_PB_Q1corr_target(ones(20))
 K11_PB_Q1corr_target(ones(20))
 K11_PB_Q1corr_target(ones(20))
+
+function K11_PB_Q1corr_DEBUG(α::Array{Float64,1}; source::Array{Array{Float64,1},1}=tmprand, 
+  normal::Array{Array{Float64,1},1}=tmprand, salvare::Array{Float64,1}=tmprands,
+  iv1::Array{Array{Int64,1},1}=tmprandInc2 ,
+  wv1::Array{Array{Float64,1},1}=tmprandW1 , 
+  h::Real=0.1,    
+  targets::Array{Array{Float64,1},1}=tmprand,
+  kappa_val::Real=1.0, theta_val::Real=1.0)
+
+  Mt = length(targets)
+  Mm = length(α)
+  Aα = Array{Float64,1}(undef,Mt);
+
+  for m=1:Mt
+      ind_1 = Array{Int64,1}(1:Mm);
+      setdiff!( ind_1, iv1[m] )
+      for l in ind_1
+        if isnan(dGny_diff(targets[m], source[l], normal[l], kappa_val, theta_val))
+          println("dGdny  = $(dGny_diff(targets[m], source[l], normal[l], kappa_val, theta_val))")
+          println("index  = target $(m), source $(l)")
+          println("diff   = ",norm(targets[m].-source[l]))
+          println("target = $(targets[m])")
+          println("source = $(source[l])")
+          println("normal = $(normal[l])")
+        end
+      end
+      Aα[m] = sum( [ α[l] * salvare[l] * dGny_diff(targets[m], source[l], normal[l], kappa_val, theta_val) for l in ind_1 ] )*h^3
+      Aα[m] += sum( α[iv1[m]] .* salvare[iv1[m]] .*  wv1[m] )*h^2 
+  end
+  return Aα
+end
+K11_PB_Q1corr_DEBUG(ones(20))
+K11_PB_Q1corr_DEBUG(ones(20))
+K11_PB_Q1corr_DEBUG(ones(20))
 
 function K22_PB_Q1corr_target(α::Array{Float64,1}; source::Array{Array{Float64,1},1}=tmprand, 
   salvare::Array{Float64,1}=tmprands,
@@ -1622,7 +2174,7 @@ K21_PB_Q1corr_target(ones(20))
 function K12_PB_Q1corr_target(α::Array{Float64,1}; source::Array{Array{Float64,1},1}=tmprand, 
   salvare::Array{Float64,1}=tmprands,
   iv1::Array{Array{Int64,1},1}=tmprandInc2 ,
-  wv1::Array{Array{Float64,1},1}=tmprandW1 , 
+  #wv1::Array{Array{Float64,1},1}=tmprandW1 , 
   h::Real=0.1,    
   targets::Array{Array{Float64,1},1}=tmprand,
   kappa_val::Real=1.0)
@@ -1635,7 +2187,7 @@ function K12_PB_Q1corr_target(α::Array{Float64,1}; source::Array{Array{Float64,
       ind_1 = Array{Int64,1}(1:Mm);
       setdiff!( ind_1, iv1[m] )
       Aα[m] = sum( [ α[l] * salvare[l] * G0Gk(targets[m], source[l], kappa_val) for l in ind_1 ] )*h^3
-      Aα[m] += sum( α[iv1[m]] .* salvare[iv1[m]] .*  wv1[m] )*h^3
+      Aα[m] += sum( α[iv1[m]] .* salvare[iv1[m]] )*(h^3)*(kappa_val/(4*pi))
   end
   return Aα
 end

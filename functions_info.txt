@@ -1,0 +1,11 @@
+secondt_cost = 0.25/pi
+epsl_ratio = epslE/epslI
+
+ij0_PB_a(t,D0,Amat,Mmat) = 0.5*(dot(D0*Amat*[cos(t);sin(t)], Mmat*D0*Amat*[cos(t);sin(t)]))/(norm(D0*Amat*[cos(t);sin(t)])^3)
+
+wjj = w_k0_ptilde1([α;β]; lfun=(t->ij0_PB_a(t,D0_now,Amat, Mmat)));
+w21 = w_k0_ptilde1([α;β]; lfun=(t->1/norm(D0_now*Amat*[cos(t);sin(t)])))
+w_K11_single[ m ][ itmp ] = wjj * secondt_const * (1-epsl_ratio)
+w_K22_single[ m ][ itmp ] = wjj * secondt_const * (1- 1/epsl_ratio)
+w_K21_single[ m ][ itmp ] = w21 * secondt_const * 0.5 * kappa_val^2
+w_K12_single[ m ][ itmp ] = secondt_const * kappa_val # no actual weight computation necessary
