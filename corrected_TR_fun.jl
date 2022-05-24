@@ -391,10 +391,10 @@ function PB_gen_shape_system(N;
     plotting_surface::Bool=false, count::Int64=1
     )
 
-    RadiiVec = [0.5]
+    # RadiiVec = [0.5]
     x0Vec = [zeros(3)]
-    # RadiiVec = [1.0; 0.7]
-    # x0Vec = [[-RadiiVec[1];0;0],[RadiiVec[2];0;0]]
+    RadiiVec = [1.0; 0.7]
+    x0Vec = [[-RadiiVec[1];0;0],[RadiiVec[2];0;0]]
     qSpheres = [1.0;1.5]
     nSpheres = length(RadiiVec);
     
@@ -407,12 +407,12 @@ function PB_gen_shape_system(N;
     pl=4;
     h = 1.1*(2R+0.2)/(N)
     println(1.1*(2R+0.2)/(N))
-    # Xlim = [(-2.3)*1.1-pl*h; (1.5)*1.1+pl*h]
-    # Ylim = [(-1.5)*1.1-pl*h; (1.5)*1.1+pl*h]
-    # Zlim = [(-1.5)*1.1-pl*h; (1.5)*1.1+pl*h]
-    Xlim = [(-0.7)*1.1-pl*h; (0.7)*1.1+pl*h]
-    Ylim = [(-0.7)*1.1-pl*h; (0.7)*1.1+pl*h]
-    Zlim = [(-0.7)*1.1-pl*h; (0.7)*1.1+pl*h]
+    Xlim = [(-2.3)*1.1-pl*h; (1.5)*1.1+pl*h]
+    Ylim = [(-1.5)*1.1-pl*h; (1.5)*1.1+pl*h]
+    Zlim = [(-1.5)*1.1-pl*h; (1.5)*1.1+pl*h]
+    # Xlim = [(-0.7)*1.1-pl*h; (0.7)*1.1+pl*h]
+    # Ylim = [(-0.7)*1.1-pl*h; (0.7)*1.1+pl*h]
+    # Zlim = [(-0.7)*1.1-pl*h; (0.7)*1.1+pl*h]
     
     ε = fε(h)
     # println("epsl=",ε)
@@ -558,18 +558,18 @@ function PB_gen_shape_system(N;
     end
 
     # single sphere
-    Pgammafun = (z -> Pgammafun_sphere(z,x0Vec[1],RadiiVec[1]) )
-    insidepoint = (z-> insidepoint_sphere(z,x0Vec[1],RadiiVec[1]) )
-    get_jac = (z-> get_jac_sphere(z,x0Vec[1],RadiiVec[1]) )
-    far_insidepoint = (z-> far_insidepoint_sphere(z,x0Vec[1],RadiiVec[1],ε) )
-    far_outsidepoint = (z-> far_outsidepoint_sphere(z,x0Vec[1],RadiiVec[1],ε) )
+    # Pgammafun = (z -> Pgammafun_sphere(z,x0Vec[1],RadiiVec[1]) )
+    # insidepoint = (z-> insidepoint_sphere(z,x0Vec[1],RadiiVec[1]) )
+    # get_jac = (z-> get_jac_sphere(z,x0Vec[1],RadiiVec[1]) )
+    # far_insidepoint = (z-> far_insidepoint_sphere(z,x0Vec[1],RadiiVec[1],ε) )
+    # far_outsidepoint = (z-> far_outsidepoint_sphere(z,x0Vec[1],RadiiVec[1],ε) )
     
     # # two touching spheres
-    # Pgammafun = Pgammafun_spheres
-    # insidepoint = insidepoint_spheres
-    # get_jac = get_jac_spheres
-    # far_insidepoint = far_insidepoint_spheres
-    # far_outsidepoint = far_outsidepoint_spheres
+    Pgammafun = Pgammafun_spheres
+    insidepoint = insidepoint_spheres
+    get_jac = get_jac_spheres
+    far_insidepoint = far_insidepoint_spheres
+    far_outsidepoint = far_outsidepoint_spheres
     
 
     Nepsl2h=Int(ceil(2*ε/h)) # how many discretization points fall in the tubular neighborhood with these values of ε and h
@@ -795,24 +795,28 @@ function PB_gen_shape_system(N;
         # println("Avg K12, corrb: $avgK12_corrb")
 
 
-        val_err = zeros(4,M)
+        # val_err = zeros(4,M)
         # val_err[1,:] = abs.(λ1*psi_an[1] .+ K11_IBIM*psi_an[1] .- K12_IBIM*psin_an[1] .- g1)./abs(g1)
         # val_err[2,:] = abs.(λ2*psin_an[1] .+ K21_IBIM*psi_an[1] .- K22_IBIM*psin_an[1] .- g2)./abs(g2)
         # val_err[3,:] = abs.(λ1*psi_an[1] .+ K11_corrb*psi_an[1] .- K12_corrb*psin_an[1] .- g1)./abs(g1)
         # val_err[4,:] = abs.(λ2*psin_an[1] .+ K21_corrb*psi_an[1] .- K22_corrb*psin_an[1] .- g2)./abs(g2)
 
         mval_abs = mean(val_abs, dims=2)
-        mval_err = mean(val_err, dims=2)
+        # mval_err = mean(val_err, dims=2)
 
-        println("Errors for sphere:")
-        println(mval_err)
+        # println("Errors for sphere:")
+        # println(mval_err)
         println("Average of potentials over targets:\n",mval_abs[1:8])
         # println(mval_err)
     end
 
     # begin # building the matrix
     #     MyMatrix = zeros(2M,2M);
+    #     for i=1:M
+    #         for j=1:M
 
+    #         end
+    #     end
     # end
 
     # solving the PB problem
@@ -887,6 +891,14 @@ function PB_gen_shape_system(N;
         println("Solution error: $(errvec[:,1])")
         println("Surface  error: $(errvec[:,2])")
         println("Energy   error: $(errvec[:,3])")
+
+        println("Gpol (IBIM/corr):")
+        println(Gpol_IBIM)
+        println(Gpol_corr)
+        println("Surf-area (IBIM/corr):")
+        println(surf_val[1])
+        println(surf_val[2])
+        # println()
     end
  
     x=[ R, R1, R2]
@@ -949,7 +961,7 @@ function PB_gen_shape_system(N;
 
     println("Run over.")
 
-    return h, val_abs, val_err, mval_abs, mval_err, surf_val, errvec
+    return h, val_abs, mval_abs, surf_val, errvec
 end
 
 function PB_gen_shape_system_DEBUG(N;

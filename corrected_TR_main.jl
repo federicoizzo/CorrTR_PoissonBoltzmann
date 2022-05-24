@@ -474,7 +474,7 @@ if ~false  # ε~2h test on the spheres
   # Nvec = 64:8:400
   # Nvec = 64:8:300
   # Nvec = [40;64;80]
-  Nvec = [25]
+  Nvec = [23]
   # Nvec = 64:8:248
   # Nvec = 64:10:224
   
@@ -503,7 +503,7 @@ if ~false  # ε~2h test on the spheres
       println("\nRun $i/$nmax")
       local h = 0.1
       ε = 0.1
-      @time hval[i], val_abs[:,:,i], val_err[:,:,i], mval_abs[:,i], mval_err[:,i],  surf_val[:,i], errvec[i,:,:] = PB_gen_shape_system( Nvec[i]; surfTargetXYZ=TPtargets, shift=shift, epslI=1.0, epslE=80.0, kappa_val=0.1257, fε=fε, plotting_surface=(i==0), count=i)
+      @time hval[i], val_abs[:,:,i], mval_abs[:,i], surf_val[:,i], errvec[i,:,:] = PB_gen_shape_system( Nvec[i]; surfTargetXYZ=TPtargets, shift=shift, epslI=1.0, epslE=80.0, kappa_val=0.1257, fε=fε, plotting_surface=(i==0), count=i)
       GC.gc()
   end
   x = detail;
