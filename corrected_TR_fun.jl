@@ -602,10 +602,10 @@ function PB_gen_shape_system(N;
 
     @time M, Pg, source, indIJK_to_M, indM_to_IJK, dsignes, iv1, w_K11_single, w_K22_single, w_K21_single, normal, iv1_t, w_K11_single_t, w_K22_single_t, w_K21_single_t, target_normal = genCPM_corr_PB_system(Pgammafun, insidepoint, far_insidepoint, far_outsidepoint, X, Y, Z, Nvec, ε, h; outflag=outflag, surfTargetXYZ=surfTargetXYZ, epsl_ratio=epsl_ratio, kappa_val=kappa_val)
 
-    for i=1:n_surf_trg
-        # surfTargetXYZ[i] = Pgammafun(surfTargetXYZ[i])
-        target_normal[i] = normalz_sphere(surfTargetXYZ[i],x0Vec[1],RadiiVec[1])
-    end
+    # for i=1:n_surf_trg
+    #     # surfTargetXYZ[i] = Pgammafun(surfTargetXYZ[i])
+    #     target_normal[i] = normalz_sphere(surfTargetXYZ[i],x0Vec[1],RadiiVec[1])
+    # end
 
     # println("w_K11_single $w_K11_single")
     # println("w_K21_single $w_K21_single")
@@ -665,7 +665,7 @@ function PB_gen_shape_system(N;
     salvare_w2 = salvare_ker.*salvare_jac_2nd # missing h3
     salvareu = salvare_w2
 
-    println(salvareu)
+    # println(salvareu)
     
     surf_val = zeros(2)
     surf_val[1] = sum(salvare_wo)*h3
@@ -773,33 +773,33 @@ function PB_gen_shape_system(N;
         mval_err2 = mean(val_err2, dims=2)
         println(mval_err2)
 
-        # println("Node potentials:")
-        @time K11_corrb = K11_PB_Q1corr_target(β; source=source, normal=normal, salvare=salvareu, targets=source, kappa_val=kappa_val, theta_val=epsl_ratio, h=h, iv1=iv1, wv1=w_K11_single)
-        # println(tmp1)
-        @time K22_corrb = K22_PB_Q1corr_target(β; source=source, targetnormals=normal, salvare=salvareu, targets=source, kappa_val=kappa_val, theta_val=1/epsl_ratio, h=h, iv1=iv1, wv1=w_K22_single)
-        # println(tmp1)
-        @time K21_corrb = K21_PB_Q1corr_target(β; source=source, normal=normal,  targetnormals=normal, salvare=salvareu, targets=source, kappa_val=kappa_val, h=h, iv1=iv1, wv1=w_K21_single)
-        # println(tmp1)
-        @time K12_corrb = K12_PB_Q1corr_target(β; source=source, salvare=salvareu, targets=source, kappa_val=kappa_val, h=h, iv1=iv1)
-        # println(tmp1)
-        # println(K22_corr)
-        # println(K21_corr)
-        # println(K12_corr)
-        avgK11_corrb = mean(K11_corrb)
-        avgK22_corrb = mean(K22_corrb)
-        avgK21_corrb = mean(K21_corrb)
-        avgK12_corrb = mean(K12_corrb)
-        println("Avg K11, corrb: $avgK11_corrb")
-        println("Avg K22, corrb: $avgK22_corrb")
-        println("Avg K21, corrb: $avgK21_corrb")
-        println("Avg K12, corrb: $avgK12_corrb")
+        # # println("Node potentials:")
+        # @time K11_corrb = K11_PB_Q1corr_target(β; source=source, normal=normal, salvare=salvareu, targets=source, kappa_val=kappa_val, theta_val=epsl_ratio, h=h, iv1=iv1, wv1=w_K11_single)
+        # # println(tmp1)
+        # @time K22_corrb = K22_PB_Q1corr_target(β; source=source, targetnormals=normal, salvare=salvareu, targets=source, kappa_val=kappa_val, theta_val=1/epsl_ratio, h=h, iv1=iv1, wv1=w_K22_single)
+        # # println(tmp1)
+        # @time K21_corrb = K21_PB_Q1corr_target(β; source=source, normal=normal,  targetnormals=normal, salvare=salvareu, targets=source, kappa_val=kappa_val, h=h, iv1=iv1, wv1=w_K21_single)
+        # # println(tmp1)
+        # @time K12_corrb = K12_PB_Q1corr_target(β; source=source, salvare=salvareu, targets=source, kappa_val=kappa_val, h=h, iv1=iv1)
+        # # println(tmp1)
+        # # println(K22_corr)
+        # # println(K21_corr)
+        # # println(K12_corr)
+        # avgK11_corrb = mean(K11_corrb)
+        # avgK22_corrb = mean(K22_corrb)
+        # avgK21_corrb = mean(K21_corrb)
+        # avgK12_corrb = mean(K12_corrb)
+        # println("Avg K11, corrb: $avgK11_corrb")
+        # println("Avg K22, corrb: $avgK22_corrb")
+        # println("Avg K21, corrb: $avgK21_corrb")
+        # println("Avg K12, corrb: $avgK12_corrb")
 
 
         val_err = zeros(4,M)
         # val_err[1,:] = abs.(λ1*psi_an[1] .+ K11_IBIM*psi_an[1] .- K12_IBIM*psin_an[1] .- g1)./abs(g1)
         # val_err[2,:] = abs.(λ2*psin_an[1] .+ K21_IBIM*psi_an[1] .- K22_IBIM*psin_an[1] .- g2)./abs(g2)
-        val_err[3,:] = abs.(λ1*psi_an[1] .+ K11_corrb*psi_an[1] .- K12_corrb*psin_an[1] .- g1)./abs(g1)
-        val_err[4,:] = abs.(λ2*psin_an[1] .+ K21_corrb*psi_an[1] .- K22_corrb*psin_an[1] .- g2)./abs(g2)
+        # val_err[3,:] = abs.(λ1*psi_an[1] .+ K11_corrb*psi_an[1] .- K12_corrb*psin_an[1] .- g1)./abs(g1)
+        # val_err[4,:] = abs.(λ2*psin_an[1] .+ K21_corrb*psi_an[1] .- K22_corrb*psin_an[1] .- g2)./abs(g2)
 
         mval_abs = mean(val_abs, dims=2)
         mval_err = mean(val_err, dims=2)
@@ -809,6 +809,11 @@ function PB_gen_shape_system(N;
         println("Average of potentials over targets:\n",mval_abs[1:8])
         # println(mval_err)
     end
+
+    # begin # building the matrix
+    #     MyMatrix = zeros(2M,2M);
+
+    # end
 
     # solving the PB problem
     begin # defining the functions and linear maps for solving system

@@ -700,15 +700,15 @@ function normalz_sphere(z,x0,R)
   return (norm(z-x0)>1e-8)*((z-x0)/norm(z-x0)) + (norm(z-x0)<=1e-8)*([0;0;1.]);
 end
 function insidepoint_sphere(z,x0,R)
-  z = Pgammafun_sphere(z,x0,R)
+  # z = Pgammafun_sphere(z,x0,R)
   return norm(z-x0)<R
 end
 function far_insidepoint_sphere(z,x0,R,ε)
-  z = Pgammafun_sphere(z,x0,R)
+  # z = Pgammafun_sphere(z,x0,R)
   return norm(z-x0)<R-ε
 end
 function far_outsidepoint_sphere(z,x0,R,ε)
-  z = Pgammafun_sphere(z,x0,R)
+  # z = Pgammafun_sphere(z,x0,R)
   return norm(z-x0)>R+ε
 end
 
