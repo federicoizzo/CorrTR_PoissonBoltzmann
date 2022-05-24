@@ -410,9 +410,9 @@ function PB_gen_shape_system(N;
     # Xlim = [(-2.3)*1.1-pl*h; (1.5)*1.1+pl*h]
     # Ylim = [(-1.5)*1.1-pl*h; (1.5)*1.1+pl*h]
     # Zlim = [(-1.5)*1.1-pl*h; (1.5)*1.1+pl*h]
-    Xlim = [(-0.6)*1.1-pl*h; (0.6)*1.1+pl*h]
-    Ylim = [(-0.6)*1.1-pl*h; (0.6)*1.1+pl*h]
-    Zlim = [(-0.6)*1.1-pl*h; (0.6)*1.1+pl*h]
+    Xlim = [(-0.7)*1.1-pl*h; (0.7)*1.1+pl*h]
+    Ylim = [(-0.7)*1.1-pl*h; (0.7)*1.1+pl*h]
+    Zlim = [(-0.7)*1.1-pl*h; (0.7)*1.1+pl*h]
     
     ε = fε(h)
     # println("epsl=",ε)
@@ -580,6 +580,7 @@ function PB_gen_shape_system(N;
     n_surf_trg = length(surfTargetXYZ)
     for i=1:n_surf_trg
         surfTargetXYZ[i] = Pgammafun(surfTargetXYZ[i])
+        # target_normal[i] = normalz_sphere(source[m],x0Vec[1],RadiiVec[1])
     end
     
     rshift = xshift+shift;
@@ -601,6 +602,11 @@ function PB_gen_shape_system(N;
 
     @time M, Pg, source, indIJK_to_M, indM_to_IJK, dsignes, iv1, w_K11_single, w_K22_single, w_K21_single, normal, iv1_t, w_K11_single_t, w_K22_single_t, w_K21_single_t, target_normal = genCPM_corr_PB_system(Pgammafun, insidepoint, far_insidepoint, far_outsidepoint, X, Y, Z, Nvec, ε, h; outflag=outflag, surfTargetXYZ=surfTargetXYZ, epsl_ratio=epsl_ratio, kappa_val=kappa_val)
 
+    for i=1:n_surf_trg
+        # surfTargetXYZ[i] = Pgammafun(surfTargetXYZ[i])
+        target_normal[i] = normalz_sphere(surfTargetXYZ[i],x0Vec[1],RadiiVec[1])
+    end
+
     # println("w_K11_single $w_K11_single")
     # println("w_K21_single $w_K21_single")
     # println("w_K22_single $w_K22_single")
@@ -618,11 +624,11 @@ function PB_gen_shape_system(N;
         # y = [ X[i]; Y[j]; Z[k] ] # node in 3D volume
         
         # computing the normal with potentially one-sided 2nd order scheme
-        # iind, i1 = get_indices_b(dsignes[i-2:i+2,j,k])
-        # jind, j1 = get_indices_b(dsignes[i,j-2:j+2,k])
-        # kind, k1 = get_indices_b(dsignes[i,j,k-2:k+2])
-        # normal[m] = [dot(dsignes[iind.+i,j,k],i1); dot(dsignes[i,jind.+j,k],j1);dot(dsignes[i,j,kind.+k],k1)]/h
-        # normal[m] /= norm(normal[m])
+        iind, i1 = get_indices_b(dsignes[i-2:i+2,j,k])
+        jind, j1 = get_indices_b(dsignes[i,j-2:j+2,k])
+        kind, k1 = get_indices_b(dsignes[i,j,k-2:k+2])
+        normal[m] = [dot(dsignes[iind.+i,j,k],i1); dot(dsignes[i,jind.+j,k],j1);dot(dsignes[i,j,kind.+k],k1)]/h
+        normal[m] /= norm(normal[m])
 
         # computing the Jacobian with potentially one-sided 2nd order scheme
         ind1, i11 = get_indices_b(Pg[i-2:i+2,j,k,1])
@@ -649,6 +655,7 @@ function PB_gen_shape_system(N;
         salvare_jac_2nd[m] = jac[1]*jac[2]
 
         salvare_ker[m] = (abs(dsignes[i,j,k])<ε)*w_ker(dsignes[i,j,k]/ε)/ε # zero outside the tubular neighborhood
+        # normal[m] = normalz_sphere(source[m],x0Vec[1],RadiiVec[1])
         
         # β[m] = mysmoothf(source[m]) # given density
         β[m] = 1. # given density
@@ -681,28 +688,40 @@ function PB_gen_shape_system(N;
     # IBIM is with Jacobian=1
     println("Evaluating the potentials in IBIM (4) and CTR (4)")
     @time begin
-        K11_IBIM = K11_PB_IBIM_target(β; source=source, normal=normal, salvare=salvare_wo, targets=surfTargetXYZ, tau=tau, kappa_val=kappa_val, theta_val=epsl_ratio)*h3
-        K22_IBIM = K22_PB_IBIM_target(β; source=source, normal=normal, targetnormals=target_normal, salvare=salvare_wo, targets=surfTargetXYZ, tau=tau, kappa_val=kappa_val, theta_val=1/epsl_ratio)*h3
-        K21_IBIM = K21_PB_IBIM_target(β; source=source, normal=normal, targetnormals=target_normal, salvare=salvare_wo, targets=surfTargetXYZ, tau=tau, kappa_val=kappa_val)*h3
-        K12_IBIM = K12_PB_IBIM_target(β; source=source, salvare=salvare_wo, targets=surfTargetXYZ, tau=tau, kappa_val=kappa_val)*h3
+        K11_IBIM = K11_PB_IBIM_target(β; source=source, normal=normal, salvare=salvareu, targets=surfTargetXYZ, tau=tau, kappa_val=kappa_val, theta_val=epsl_ratio)*h3
+        K22_IBIM = K22_PB_IBIM_target(β; source=source, targetnormals=target_normal, salvare=salvareu, targets=surfTargetXYZ, tau=tau, kappa_val=kappa_val, theta_val=1/epsl_ratio)*h3
+        K21_IBIM = K21_PB_IBIM_target(β; source=source, normal=normal, targetnormals=target_normal, salvare=salvareu, targets=surfTargetXYZ, tau=tau, kappa_val=kappa_val)*h3
+        K12_IBIM = K12_PB_IBIM_target(β; source=source, salvare=salvareu, targets=surfTargetXYZ, tau=tau, kappa_val=kappa_val)*h3
 
         K11_corr = K11_PB_Q1corr_target(β; source=source, normal=normal, salvare=salvareu, targets=surfTargetXYZ, kappa_val=kappa_val, theta_val=epsl_ratio, h=h, iv1=iv1_t, wv1=w_K11_single_t)
         K22_corr = K22_PB_Q1corr_target(β; source=source, targetnormals=target_normal, salvare=salvareu, targets=surfTargetXYZ, kappa_val=kappa_val, theta_val=1/epsl_ratio, h=h, iv1=iv1_t, wv1=w_K22_single_t)
         K21_corr = K21_PB_Q1corr_target(β; source=source, normal=normal,  targetnormals=target_normal, salvare=salvareu, targets=surfTargetXYZ, kappa_val=kappa_val, h=h, iv1=iv1_t, wv1=w_K21_single_t)
         K12_corr = K12_PB_Q1corr_target(β; source=source, salvare=salvareu, targets=surfTargetXYZ, kappa_val=kappa_val, h=h, iv1=iv1_t)
 
-        # println("Node potentials:")
-        @time K11_corrb = K11_PB_Q1corr_target(β; source=source, normal=normal, salvare=salvareu, targets=source, kappa_val=kappa_val, theta_val=epsl_ratio, h=h, iv1=iv1, wv1=w_K11_single)
-        # println(tmp1)
-        @time K22_corrb = K22_PB_Q1corr_target(β; source=source, targetnormals=normal, salvare=salvareu, targets=source, kappa_val=kappa_val, theta_val=1/epsl_ratio, h=h, iv1=iv1, wv1=w_K22_single)
-        # println(tmp1)
-        @time K21_corrb = K21_PB_Q1corr_target(β; source=source, normal=normal,  targetnormals=normal, salvare=salvareu, targets=source, kappa_val=kappa_val, h=h, iv1=iv1, wv1=w_K21_single)
-        # println(tmp1)
-        @time K12_corrb = K12_PB_Q1corr_target(β; source=source, salvare=salvareu, targets=source, kappa_val=kappa_val, h=h, iv1=iv1)
-        # println(tmp1)
-        # println(K22_corr)
-        # println(K21_corr)
-        # println(K12_corr)
+    end
+
+    if plotting_surface
+        # println(surfTargetXYZ[1])
+        # println(surfTargetXYZ)
+        xp = [ sour[1] for sour in source ];
+        yp = [ sour[2] for sour in source ];
+        zp = [ sour[3] for sour in source ];
+        xt = [ t[1] for t in surfTargetXYZ ];
+        yt = [ t[2] for t in surfTargetXYZ ];
+        zt = [ t[3] for t in surfTargetXYZ ];
+        figure(50); clf()
+
+        # c=scatter3D( xp, yp, zp, s=1, c=log10.(abs.(β)), marker=".")
+        scatter3D( xp, yp, zp, s=1, c="k", marker=".")
+        # colorbar(c)
+
+        
+        scatter3D( xt, yt, zt, s=3, c="r", marker=".")
+        # colorbar(c)
+        
+        xlim([-1.0;1])
+        ylim([-1.0;1])
+        zlim([-1.0;1])
     end
 
     begin # analytic values for single sphere
@@ -710,6 +729,7 @@ function PB_gen_shape_system(N;
 
         psi_an = ones(M)*qSpheres[1]/(4*pi*epslE*(1+kappa_val*RadiiVec[1])*RadiiVec[1])
         psin_an = -ones(M)*qSpheres[1]/(4*pi*epslI*RadiiVec[1]^2)
+
         Gpol_an = qSpheres[1]^2*(1/(epslE*(1+kappa_val*RadiiVec[1]))-1/epslI)/(8*pi*RadiiVec[1])
         surf_area = 4*pi*RadiiVec[1]^2
     end
@@ -734,6 +754,47 @@ function PB_gen_shape_system(N;
         val_err2[3,:] = abs.(λ1*psi_an[1] .+ K11_corr*psi_an[1] .- K12_corr*psin_an[1] .- g1)./abs(g1)
         val_err2[4,:] = abs.(λ2*psin_an[1] .+ K21_corr*psi_an[1] .- K22_corr*psin_an[1] .- g2)./abs(g2)
 
+
+        println("psi values: $(psi_an[1]), $(psin_an[1])")
+        println("g1,g2 = $g1, $g2")
+        avgK11_IBIM = mean(K11_IBIM)
+        avgK11_corr = mean(K11_corr)
+        avgK22_IBIM = mean(K22_IBIM)
+        avgK22_corr = mean(K22_corr)
+        avgK21_IBIM = mean(K21_IBIM)
+        avgK21_corr = mean(K21_corr)
+        avgK12_IBIM = mean(K12_IBIM)
+        avgK12_corr = mean(K12_corr)
+        println("Avg K11, IBIM/corr: $avgK11_IBIM, $avgK11_corr")
+        println("Avg K22, IBIM/corr: $avgK22_IBIM, $avgK22_corr")
+        println("Avg K21, IBIM/corr: $avgK21_IBIM, $avgK21_corr")
+        println("Avg K12, IBIM/corr: $avgK12_IBIM, $avgK12_corr")
+
+        mval_err2 = mean(val_err2, dims=2)
+        println(mval_err2)
+
+        # println("Node potentials:")
+        @time K11_corrb = K11_PB_Q1corr_target(β; source=source, normal=normal, salvare=salvareu, targets=source, kappa_val=kappa_val, theta_val=epsl_ratio, h=h, iv1=iv1, wv1=w_K11_single)
+        # println(tmp1)
+        @time K22_corrb = K22_PB_Q1corr_target(β; source=source, targetnormals=normal, salvare=salvareu, targets=source, kappa_val=kappa_val, theta_val=1/epsl_ratio, h=h, iv1=iv1, wv1=w_K22_single)
+        # println(tmp1)
+        @time K21_corrb = K21_PB_Q1corr_target(β; source=source, normal=normal,  targetnormals=normal, salvare=salvareu, targets=source, kappa_val=kappa_val, h=h, iv1=iv1, wv1=w_K21_single)
+        # println(tmp1)
+        @time K12_corrb = K12_PB_Q1corr_target(β; source=source, salvare=salvareu, targets=source, kappa_val=kappa_val, h=h, iv1=iv1)
+        # println(tmp1)
+        # println(K22_corr)
+        # println(K21_corr)
+        # println(K12_corr)
+        avgK11_corrb = mean(K11_corrb)
+        avgK22_corrb = mean(K22_corrb)
+        avgK21_corrb = mean(K21_corrb)
+        avgK12_corrb = mean(K12_corrb)
+        println("Avg K11, corrb: $avgK11_corrb")
+        println("Avg K22, corrb: $avgK22_corrb")
+        println("Avg K21, corrb: $avgK21_corrb")
+        println("Avg K12, corrb: $avgK12_corrb")
+
+
         val_err = zeros(4,M)
         # val_err[1,:] = abs.(λ1*psi_an[1] .+ K11_IBIM*psi_an[1] .- K12_IBIM*psin_an[1] .- g1)./abs(g1)
         # val_err[2,:] = abs.(λ2*psin_an[1] .+ K21_IBIM*psi_an[1] .- K22_IBIM*psin_an[1] .- g2)./abs(g2)
@@ -742,10 +803,8 @@ function PB_gen_shape_system(N;
 
         mval_abs = mean(val_abs, dims=2)
         mval_err = mean(val_err, dims=2)
-        mval_err2 = mean(val_err2, dims=2)
 
         println("Errors for sphere:")
-        println(mval_err2)
         println(mval_err)
         println("Average of potentials over targets:\n",mval_abs[1:8])
         # println(mval_err)
@@ -754,7 +813,7 @@ function PB_gen_shape_system(N;
     # solving the PB problem
     begin # defining the functions and linear maps for solving system
         K11_IBIM_f = (α -> K11_PB_IBIM_target(α; source=source, normal=normal, salvare=salvare_wo, targets=source, tau=tau, kappa_val=kappa_val, theta_val=epsl_ratio)*h3)
-        K22_IBIM_f = (α -> K22_PB_IBIM_target(α; source=source, normal=normal, salvare=salvare_wo, targets=source, targetnormals=normal, tau=tau, kappa_val=kappa_val, theta_val=1/epsl_ratio)*h3)
+        K22_IBIM_f = (α -> K22_PB_IBIM_target(α; source=source, salvare=salvare_wo, targets=source, targetnormals=normal, tau=tau, kappa_val=kappa_val, theta_val=1/epsl_ratio)*h3)
         K21_IBIM_f = (α -> K21_PB_IBIM_target(α; source=source, normal=normal, salvare=salvare_wo, targets=source, targetnormals = normal, tau=tau, kappa_val=kappa_val)*h3)
         K12_IBIM_f = (α -> K12_PB_IBIM_target(α; source=source, salvare=salvare_wo, targets=source, tau=tau, kappa_val=kappa_val)*h3)
 
@@ -782,8 +841,8 @@ function PB_gen_shape_system(N;
     begin # creating the RHS vectors
         g1 = zeros(M); g2 = zeros(M);
         for i=1:nSpheres
-            g1 .+= qSpheres[i]*[ Gk_PB(source[m], RadiiVec[i], 0) for m=1:M]/epslI
-            g2 .+= qSpheres[i]*[ dGkdnx(source[m], RadiiVec[i], normal[m], 0) for m=1:M]/epslI
+            g1 .+= qSpheres[i]*[ Gk_PB(source[m], x0Vec[i], 0) for m=1:M]/epslI
+            g2 .+= qSpheres[i]*[ dGkdnx(source[m], x0Vec[i], normal[m], 0) for m=1:M]/epslI
         end
     end
 
@@ -823,30 +882,6 @@ function PB_gen_shape_system(N;
         println("Solution error: $(errvec[:,1])")
         println("Surface  error: $(errvec[:,2])")
         println("Energy   error: $(errvec[:,3])")
-    end
-
-    if plotting_surface
-        # println(surfTargetXYZ[1])
-        # println(surfTargetXYZ)
-        xp = [ sour[1] for sour in source ];
-        yp = [ sour[2] for sour in source ];
-        zp = [ sour[3] for sour in source ];
-        xt = [ t[1] for t in surfTargetXYZ ];
-        yt = [ t[2] for t in surfTargetXYZ ];
-        zt = [ t[3] for t in surfTargetXYZ ];
-        figure(50); clf()
-
-        # c=scatter3D( xp, yp, zp, s=1, c=log10.(abs.(β)), marker=".")
-        scatter3D( xp, yp, zp, s=1, c="k", marker=".")
-        # colorbar(c)
-
-        
-        scatter3D( xt, yt, zt, s=3, c="r", marker=".")
-        # colorbar(c)
-        
-        xlim([-1.0;1])
-        ylim([-1.0;1])
-        zlim([-1.0;1])
     end
  
     x=[ R, R1, R2]

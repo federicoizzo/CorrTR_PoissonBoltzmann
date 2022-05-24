@@ -1,35 +1,35 @@
 # Subroutines for support of CTRvsIBIM for Poisson-Boltzmann
 
 # standalone kernels (kappa=0 -> Laplace)
-Gk_PB(x,y,kappa) = exp(-kappa*norm(x.-y))/(4*pi*norm(x.-y))
-dGkdnx(x,y,nx,kappa) = -exp(-kappa*norm(x.-y))*(1+kappa*norm(x.-y))*dot(x.-y,nx)/(4*pi*norm(x.-y)^3)
-dGkdny(x,y,ny,kappa) = exp(-kappa*norm(x.-y))*(1+kappa*norm(x.-y))*dot(x.-y,ny)/(4*pi*norm(x.-y)^3)
+Gk_PB(x,y,kappa) = exp(-kappa*norm(x-y))/(4*pi*norm(x-y))
+dGkdnx(x,y,nx,kappa) = -exp(-kappa*norm(x-y))*(1+kappa*norm(x-y))*dot(x-y,nx)/(4*pi*norm(x-y)^3)
+dGkdny(x,y,ny,kappa) = exp(-kappa*norm(x-y))*(1+kappa*norm(x-y))*dot(x-y,ny)/(4*pi*norm(x-y)^3)
 
-d2Gkdnxdny(x,y,nx,ny,kappa) = exp(-kappa*norm(x.-y))*(1+kappa*norm(x.-y))*(dot(nx,ny)-3*dot(x.-y,nx)*dot(x.-y,ny)/norm(x.-y)^2)/(4*pi*norm(x.-y)^3) -kappa^2*exp(-kappa*norm(x.-y))*dot(x.-y,nx)*dot(x.-y,ny)/(4*pi*norm(x.-y)^3)
+d2Gkdnxdny(x,y,nx,ny,kappa) = exp(-kappa*norm(x-y))*(1+kappa*norm(x-y))*(dot(nx,ny)-3*dot(x-y,nx)*dot(x-y,ny)/norm(x-y)^2)/(4*pi*norm(x-y)^3) -kappa^2*exp(-kappa*norm(x-y))*dot(x-y,nx)*dot(x-y,ny)/(4*pi*norm(x-y)^3)
 
 # kernel differences as they appear in the formulations
 
 # difference dG0dnx - theta dGkdnx
-dGnx_diff(x,y,nx,kappa,theta) = (1-theta*exp(-kappa*norm(x.-y))*(1+kappa*norm(x.-y)))*(dot(y.-x,nx)/norm(x.-y)^3)/(4*pi) # notice (y-x) inside the dot, to get the minus sign
+dGnx_diff(x,y,nx,kappa,theta) = (1-theta*exp(-kappa*norm(x-y))*(1+kappa*norm(x-y)))*(dot(y-x,nx)/norm(x-y)^3)/(4*pi) # notice (y-x) inside the dot, to get the minus sign
 # usually theta = epsI/epsE
 
 # difference dG0dny - theta dGkdny
-dGny_diff(x,y,ny,kappa,theta) = (1-theta*exp(-kappa*norm(x.-y))*(1+kappa*norm(x.-y)))*(dot(x.-y,ny)/norm(x.-y)^3)/(4*pi) # notice (x-y) inside the dot, to retain the plus sign in constrast with the other kernel
+dGny_diff(x,y,ny,kappa,theta) = (1-theta*exp(-kappa*norm(x-y))*(1+kappa*norm(x-y)))*(dot(x-y,ny)/norm(x-y)^3)/(4*pi) # notice (x-y) inside the dot, to retain the plus sign in constrast with the other kernel
 # usually theta = epsE/epsI
 
 # difference G0 - Gk
-G0Gk(x,y,kappa) = (1-exp(-kappa*norm(x.-y)))/(4*pi*norm(x.-y))
+G0Gk(x,y,kappa) = (1-exp(-kappa*norm(x-y)))/(4*pi*norm(x-y))
 
 # difference d2G0dnxdny - d2Gkdnydny, which is integrable
-d2G_diff(x,y,nx,ny,kappa) = (dot(nx,ny)-3*dot(x.-y,nx)*dot(x.-y,ny)/norm(x.-y)^2)*(1-(1+kappa*norm(x.-y))*exp(-kappa*norm(x.-y)))/(4*pi*norm(x.-y)^3) - kappa^2*exp(-kappa*norm(x.-y))*dot(x.-y,nx)*dot(x.-y,ny)/(4*pi*norm(x.-y)^3)
+d2G_diff(x,y,nx,ny,kappa) = (dot(nx,ny)-3*dot(x-y,nx)*dot(x-y,ny)/norm(x-y)^2)*(1-(1+kappa*norm(x-y))*exp(-kappa*norm(x-y)))/(4*pi*norm(x-y)^3) - kappa^2*exp(-kappa*norm(x-y))*dot(x-y,nx)*dot(x-y,ny)/(4*pi*norm(x-y)^3)
 
 # IBIM regularizations
 
-K22_PB(x,y,nx,kappa,theta,tau) = (norm(x.-y)>=tau)*dGnx_diff(x,y,nx,kappa,theta)
-K21_PB(x,y,nx,ny,kappa,tau) = (norm(x.-y)>=tau)*d2G_diff(x,y,nx,ny,kappa)
+K22_PB(x,y,nx,kappa,theta,tau) = (norm(x-y)>=tau)*dGnx_diff(x,y,nx,kappa,theta)
+K21_PB(x,y,nx,ny,kappa,tau) = (norm(x-y)>=tau)*d2G_diff(x,y,nx,ny,kappa)
 
-K11_PB(x,y,ny,kappa,theta,tau) = (norm(x.-y)>=tau)*dGny_diff(x,y,ny,kappa,theta)
-K12_PB(x,y,kappa,tau) = (norm(x.-y)>=tau)*G0Gk(x,y,kappa) + (norm(x.-y)<tau)*(exp(-kappa*tau)-1+kappa*tau)/(2*pi*kappa*tau^2)
+K11_PB(x,y,ny,kappa,theta,tau) = (norm(x-y)>=tau)*dGny_diff(x,y,ny,kappa,theta)
+K12_PB(x,y,kappa,tau) = (norm(x-y)>=tau)*G0Gk(x,y,kappa) + (norm(x-y)<tau)*(exp(-kappa*tau)-1+kappa*tau)/(2*pi*kappa*tau^2)
 
 # solution ψ* to the Single Ion Problem (sphere of radius r):
 ψ_SIP(q,r,kappa,epsE) = q/(4*pi*epsE*(1+kappa*r)*r)
@@ -1794,21 +1794,25 @@ function genCPM_corr_PB_system( Pgammafun::Function, insidepoint::Function, far_
           D0_now = D0(η)
 
           # weights for the different kernels
-          w_K11_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->i0_PB_a(t,D0_now,Amat, Mmat, epsl_ratio)))*secondt_const
-          w_K22_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->j0_PB_a(t,D0_now,Amat, Mmat, 1/epsl_ratio)))*(-secondt_const)
-          w_K21_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->1.0./ψ0_PB_a(t,D0_now,Amat)))*(secondt_const)*0.5*kappa_val^2
+          # w_K11_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->i0_PB_a(t,D0_now,Amat, Mmat, epsl_ratio)))*secondt_const
+          # w_K22_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->j0_PB_a(t,D0_now,Amat, Mmat, 1/epsl_ratio)))*(-secondt_const)
+          # w_K21_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->1.0./ψ0_PB_a(t,D0_now,Amat)))*(secondt_const)*0.5*kappa_val^2
 
           wjj_test = w_k0_ptilde1([α;β]; lfun=(t->ij0_PB_a(t,D0_now,Amat, Mmat)));
-          w11_test = wjj_test*secondt_const*(1-epsl_ratio)
-          w22_test = wjj_test*secondt_const*(1- 1/epsl_ratio)
-          w21_test = w_k0_ptilde1([α;β]; lfun=(t->1/norm(D0_now*Amat*[cos(t);sin(t)])))*secondt_const*0.5*kappa_val^2
-          errval1 = [abs(w11_test-w_K11_single[ m ][ itmp ]);abs(w22_test-w_K22_single[ m ][ itmp ]);abs(w21_test-w_K21_single[ m ][ itmp ])]
-          if ~prod(errval1 .< 1e-9)
-            println("weight errors")
-            println("0=",abs(w11_test-w_K11_single[ m ][ itmp ]))
-            println("0=",abs(w22_test-w_K22_single[ m ][ itmp ]))
-            println("0=",abs(w21_test-w_K21_single[ m ][ itmp ]))  
-          end
+          # w11_test = wjj_test*secondt_const*(1-epsl_ratio)
+          # w22_test = wjj_test*secondt_const*(1- 1/epsl_ratio)
+          # w21_test = w_k0_ptilde1([α;β]; lfun=(t->1/norm(D0_now*Amat*[cos(t);sin(t)])))*secondt_const*0.5*kappa_val^2
+
+          w_K11_single[ m ][ itmp ] = wjj_test*secondt_const*(1-epsl_ratio)
+          w_K22_single[ m ][ itmp ] = wjj_test*secondt_const*(1- 1/epsl_ratio)
+          w_K21_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->1/norm(D0_now*Amat*[cos(t);sin(t)])))*secondt_const*0.5*kappa_val^2
+          # errval1 = [abs(w11_test-w_K11_single[ m ][ itmp ]);abs(w22_test-w_K22_single[ m ][ itmp ]);abs(w21_test-w_K21_single[ m ][ itmp ])]
+          # if ~prod(errval1 .< 1e-9)
+          #   println("weight errors")
+          #   println("0=",abs(w11_test-w_K11_single[ m ][ itmp ]))
+          #   println("0=",abs(w22_test-w_K22_single[ m ][ itmp ]))
+          #   println("0=",abs(w21_test-w_K21_single[ m ][ itmp ]))  
+          # end
           # w_K12_single_t[ m ][ itmp ] = secondt_const*kappa_val # weight is always one
           # technically useless array
           # ij0_PB_a(x,D0,Amat,Mmat)
@@ -1962,9 +1966,10 @@ function genCPM_corr_PB_system( Pgammafun::Function, insidepoint::Function, far_
       Nvecp = Nvec[pf]
       
       e1_now .= e1[pb]; e2_now .= e2[pb]; e3_now .= e3[pb]
-      e1_tmp = e1_now[pf]; e2_tmp = e2_now[pf]; nvec_tmp = norm_now[pf];
+      t1_tmp = tau1[pf]; t2_tmp = tau2[pf]; nvec_tmp = norm_now[pf];
+      # t1_tmp = e1_now[pf]; t2_tmp = e2_now[pf]; nvec_tmp = norm_now[pf];
       
-      Amat = [e1_tmp[1] e1_tmp[2];e2_tmp[1] e2_tmp[2]] # matrix A  and vector d from (3.21)
+      Amat = [t1_tmp[1] t1_tmp[2];t2_tmp[1] t2_tmp[2]] # matrix A  and vector d from (3.21)
     #   dvec = [nvec_tmp[1]; nvec_tmp[2]] # not needed for single correction
       
       # a,b,c calculated with θn,ϕn angles of normal direction in 3D, because I need to calculate distance from a point to that line
@@ -2117,9 +2122,9 @@ function K11_PB_Q1corr_DEBUG(α::Array{Float64,1}; source::Array{Array{Float64,1
   end
   return Aα
 end
-K11_PB_Q1corr_DEBUG(ones(20))
-K11_PB_Q1corr_DEBUG(ones(20))
-K11_PB_Q1corr_DEBUG(ones(20))
+# K11_PB_Q1corr_DEBUG(ones(20))
+# K11_PB_Q1corr_DEBUG(ones(20))
+# K11_PB_Q1corr_DEBUG(ones(20))
 
 function K22_PB_Q1corr_target(α::Array{Float64,1}; source::Array{Array{Float64,1},1}=tmprand, 
   salvare::Array{Float64,1}=tmprands,
@@ -2259,7 +2264,7 @@ K11_PB_IBIM_target(ones(20))
 K11_PB_IBIM_target(ones(20))
 K11_PB_IBIM_target(ones(20))
 
-function K22_PB_IBIM_target(α::Array{Float64,1}; source::Array{Array{Float64,1},1}=tmprand, normal::Array{Array{Float64,1},1}=tmprand, salvare::Array{Float64,1}=tmprands, targets::Array{Array{Float64,1},1}=tmprand, targetnormals::Array{Array{Float64,1},1}=tmprand, kappa_val::Real=1.0, theta_val::Real=1.0, tau::Real=0.1)
+function K22_PB_IBIM_target(α::Array{Float64,1}; source::Array{Array{Float64,1},1}=tmprand, salvare::Array{Float64,1}=tmprands, targets::Array{Array{Float64,1},1}=tmprand, targetnormals::Array{Array{Float64,1},1}=tmprand, kappa_val::Real=1.0, theta_val::Real=1.0, tau::Real=0.1)
   Mm = length(targets)
   Aα = Array{Float64,1}(undef,Mm);
   for i=1:Mm
