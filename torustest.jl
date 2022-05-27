@@ -5,6 +5,67 @@ Rx(a) = [1 0 0;0 cos(a) sin(a);0 -sin(a) cos(a)]
 Ry(a) = [cos(a) 0 sin(a);0 1 0;-sin(a) 0 cos(a)]
 Rz(a) = [cos(a) -sin(a) 0;sin(a) cos(a) 0;0 0 1]
 
+function Pgamma_circle(x,R,x0)
+    return (norm(x.-x0)>1e-3)*((x.-x0)*R/norm(x.-x0).+x0) + (norm(x.-x0)<=1e-3)*(x0 .+ R*x0/norm(x0))
+end
+
+function Pgamma_torus(z,Rv2,Rinv,R1,R2,xshift)
+    zn = Rinv*(z.-xshift);
+    phi = atan(zn[2],zn[1]);
+    ctmp = R1*[cos(phi);sin(phi);0];
+    return Rv2*((zn.-ctmp)/norm(zn.-ctmp)*R2.+ctmp).+xshift
+end
+
+function Pg_spheres(z, x0vec, Rvec, R3)
+    delta = norm(x0vec[1].-x0vec[2])-Rvec[1]-Rvec[2];
+    L1 = Rvec[1]+R3
+    L2 = Rvec[2]+R3
+    L3 = Rvec[1]+Rvec[2]+delta
+    alpha = 0.5+(L1^2-L2^2)/(2L3^2)
+    x1 = x0vec[1]
+    x2 = x0vec[2]
+    x3 = x0vec[1].+(alpha)*(x0vec[2].-x0vec[1])
+    a = sqrt(abs(L1^2-alpha^2*L3^2))
+    b = R3;
+    X = x0vec[2].-x0vec[1]
+    B = X/norm(X); 
+    A = [0;1;0.]
+    a1 = dot(A,B); a2 = norm(cross(A,B))
+    G = [a1 -a2 0;a2 a1 0;0 0 1];
+    u1 = A; u2 = B-a1*A; u2 /=norm(u2); u3 = cross(B,A);
+    F = ([u1 u2 u3])
+    Rottot = F*G*inv(F)
+    Rot3 = transpose(Rottot)
+
+    x4 = Rottot*[0;0;a].+x3
+    cone_compA = (1-2*(norm(x2-x3)>norm(x1-x2)))
+    sintC1 = a/norm(x4-x1); costC1 = norm(x1-x3)/norm(x4-x1); tant = sintC1/costC1
+    cone_compB = (1-2*(norm(x1-x3)>norm(x1-x2)))
+    sintC2 = a/norm(x4-x2); costC2 = norm(x2-x3)/norm(x4-x2); tant = sintC2/costC2
+    
+    p2 = Rx(-pi*0.5)*Rot3*(z.-x1)
+    p3 = Rx(pi*0.5)*Rot3*(z.-x2)
+    p2v = isInCone(sintC1, costC1, norm(x1-x3),p2, cone_compA)
+    p3v = isInCone(sintC2, costC2, norm(x2-x3),p3, cone_compB)
+
+    if ( (cone_compA*cone_compB>0) && (p2v || p3v) ) || ( (cone_compA<0) && (p3v && ~p2v) ) || ( (cone_compB<0) && (p2v && ~p3v) )
+        RotX = Rottot*Rx(-pi*0.5)
+        RotXinv = transpose(RotX)
+        xshift = x3;
+        return Pgamma_torus(z,RotX,RotXinv,a,b,xshift), 1
+    else
+        Pz1 = Pgamma_circle(z, Rvec[1], x0vec[1])
+        Pz2 = Pgamma_circle(z, Rvec[2], x0vec[2])
+        if norm(z.-x1)<Rvec[1]
+            return Pz1, -1
+        elseif norm(z.-x2)<Rvec[2]
+            return Pz2, -1
+        else
+            return (norm(z-Pz1)<norm(z-Pz2))*Pz1 .+ (norm(z-Pz1)>=norm(z-Pz2))*Pz2, -1
+        end
+    end
+end
+
 function spheres_torus_test(x0vec, Rvec, R3)
   
     delta = norm(x0vec[1].-x0vec[2])-Rvec[1]-Rvec[2];
@@ -70,7 +131,7 @@ function spheres_torus_test(x0vec, Rvec, R3)
 
 
     tmp3 = Rot3*(x2.-x1)
-    plot3D(tmp3[1],tmp3[2],tmp3[3],"sr")
+    # plot3D(tmp3[1],tmp3[2],tmp3[3],"sr")
   
     Torus2 = [ Rottot*(x).+x3 for x in Torus]
     x4 = Rottot*[a*sin(2*tvec[1]*pi);0;a*cos(2*tvec[1]*pi)].+x3
@@ -127,15 +188,16 @@ function spheres_torus_test(x0vec, Rvec, R3)
     zC2 = [x[3] for x in C2]
     # scatter3D(xC2,yC2,zC2, s=1, c="r")
 
-    nab = 1000;
+    nab = 20000;
     # pv = [ rand(3).*[1;0.5;1].-[0.5;0;0.5] for i=1:nab ]
-    pv = [ rand(3).*[1;1;1.2].+[0.5;-0.3;-0.3] for i=1:nab ]
+    pv = [ rand(3) for i=1:nab ]
     p2v = zeros(nab)
     p3v = zeros(nab)
     for i=1:nab
-        p = pv[i]
-        p2 = Rx(-pi*0.5)*Rot3*(p.-x1)
-        p3 = Rx(pi*0.5)*Rot3*(p.-x2)
+        p1b = pv[i].*[0.4;2;1.5].+[0.3;0.;0.]
+        p1a = pv[i].*[0.3;1.6;1.3].+[0.22;0.;0.]
+        p2 = Rx(-pi*0.5)*Rot3*(p1a.-x1)
+        p3 = Rx(pi*0.5)*Rot3*(p1b.-x2)
         p2v[i] = (1-2*isInCone(sintC1, costC1, norm(x1-x3),p2, cone_compA))
         p3v[i] = (1-2*isInCone(sintC2, costC2, norm(x2-x3),p3, cone_compB))
     end
@@ -143,11 +205,12 @@ function spheres_torus_test(x0vec, Rvec, R3)
     indout2 = p2v .> 0
     indins3 = p3v .<= 0
     indout3 = p3v .> 0
-    xp = [ x[1] for x in pv ]
-    yp = [ x[2] for x in pv ]
-    zp = [ x[3] for x in pv ]
+    xp = [ (x.*[0.3;1.6;1.3].+[0.22;0.;0.])[1] for x in pv ]
+    yp = [ (x.*[0.3;1.6;1.3].+[0.22;0.;0.])[2] for x in pv ]
+    zp = [ (x.*[0.3;1.6;1.3].+[0.22;0.;0.])[3] for x in pv ]
     scatter3D(xp[indins2], yp[indins2], zp[indins2], s=1.5, c="r")
-    scatter3D(xp[indout2], yp[indout2], zp[indout2], s=1.5, c="k")
+    cb = scatter3D(xp[indout2], yp[indout2], zp[indout2], s=1.5, c="k")
+    colorbar(cb)
     xlabel("x")
     ylabel("y")
     zlabel("z")
@@ -162,9 +225,55 @@ function spheres_torus_test(x0vec, Rvec, R3)
     xC2 = [x[1] for x in C2]
     yC2 = [x[2] for x in C2]
     zC2 = [x[3] for x in C2]
+    xp2 = [ (x.*[0.4;2;1.5].+[0.3;0.;0.])[1] for x in pv ]
+    yp2 = [ (x.*[0.4;2;1.5].+[0.3;0.;0.])[2] for x in pv ]
+    zp2 = [ (x.*[0.4;2;1.5].+[0.3;0.;0.])[3] for x in pv ]
     scatter3D(xcB,ycB,zcB, s=1, c="b")
-    scatter3D(xp[indins3], yp[indins3], zp[indins3], s=1.5, c="r")
-    scatter3D(xp[indout3], yp[indout3], zp[indout3], s=1.5, c="k")
+    scatter3D(xp2[indins3], yp2[indins3], zp2[indins3], s=1.5, c="r")
+    scatter3D(xp2[indout3], yp2[indout3], zp2[indout3], s=1.5, c="k")
+    xlabel("x")
+    ylabel("y")
+    zlabel("z")
+
+    pv = [ rand(3).*[0.7;2.5;2.5].+[0.;-0.5;-0.5] for i=1:nab ]
+    
+    
+    figure(202); clf()
+    PzVecA = [ Pg_spheres(pv[i], x0vec, Rvec, R3) for i=1:nab ]
+    # return PzVecA 
+    
+    PzVec = [ (PzVecA[i])[1] for i=1:nab ]
+    PzVecS = [ (PzVecA[i])[2] for i=1:nab ]
+    xpz = [ x[1] for x in PzVec ]
+    ypz = [ x[2] for x in PzVec ]
+    zpz = [ x[3] for x in PzVec ]
+    scatter3D(xpz,ypz,zpz, s=1, c=PzVecS )
+    scatter3D(xt,yt,zt, s=0.5, c="b")
+
+    scatter3D(x1[1].+Rvec[1]*xs, x1[2].+Rvec[1]*ys, x1[3].+Rvec[1]*zs, s=0.6, c="k")
+    # plot3D(x2[1],x2[2],x2[3],"or")
+    scatter3D(x2[1].+Rvec[2]*xs, x2[2].+Rvec[2]*ys, x2[3].+Rvec[2]*zs, s=0.6, c="k")
+    # scatter3D(x1[1].+Rvec[1]*xs, x1[2].+Rvec[1]*ys, x1[3].+Rvec[1]*zs, s=0.6, c="k")
+    # plot3D(x2[1],x2[2],x2[3],"or")
+    # scatter3D(x2[1].+Rvec[2]*xs, x2[2].+Rvec[2]*ys, x2[3].+Rvec[2]*zs, s=0.6, c="k")
+    xlabel("x")
+    
+    xlim([-1;1].+x3[1])
+    ylim([-1;1].+x3[2])
+    zlim([-1;1].+x3[3])
+    ylabel("y")
+    zlabel("z")
+    
+    figure(203); clf()
+    xpz2 = [ x[1] for x in pv ]
+    ypz2 = [ x[2] for x in pv ]
+    zpz2 = [ x[3] for x in pv ]
+    indins = PzVecS.>0
+    scatter3D(xpz2[indins],ypz2[indins],zpz2[indins], s=1, c="r" )
+    
+    # scatter3D(x1[1].+Rvec[1]*xs, x1[2].+Rvec[1]*ys, x1[3].+Rvec[1]*zs, s=0.6, c="k")
+    # plot3D(x2[1],x2[2],x2[3],"or")
+    # scatter3D(x2[1].+Rvec[2]*xs, x2[2].+Rvec[2]*ys, x2[3].+Rvec[2]*zs, s=0.6, c="k")
     xlabel("x")
     ylabel("y")
     zlabel("z")
@@ -335,4 +444,23 @@ function cone(theta,h)
     plot3D([0;0],[0;0],[0;1],"-k")
     
     scatter3D(xc, yc, zc, s=1, c="b")
+end
+
+function f_para(a, x, y)
+    n = length(x)
+    # z = SharedArray{Float64,1}(n)
+    z = zeros(n)
+    @threads for i=1:n
+        z[i] = sum( [ a[i,j]*x[j] for j=1:n ] )+y[i]
+    end
+    return z
+end
+
+function f_single(a, x, y)
+    n = length(x)
+    z = zeros(n)
+    for i=1:n
+        z[i] = sum( [ a[i,j]*x[j] for j=1:n ] )+y[i]
+    end
+    return z
 end

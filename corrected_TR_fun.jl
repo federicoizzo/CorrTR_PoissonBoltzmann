@@ -388,28 +388,41 @@ function PB_gen_shape_system(N;
     shift::Array{Float64,1}=[0.;0.;0.], # shift of grid w.r.t. surface center (if any)
     epslI::Real=1.0, epslE::Real=1.0, kappa_val::Real=1.0,
     fε::Function=(t->2t), # function to get espilon from h
-    plotting_surface::Bool=false, count::Int64=1
+    plotting_surface::Bool=false, count::Int64=1,
+    Zlim1::Real=-1,  Zlim2::Real=1, zcenter::Array{Float64,1}=[0.;0.;0.]
     )
 
+    # # single sphere
+    # x0Vec = [zeros(3)]
     # RadiiVec = [0.5]
-    x0Vec = [zeros(3)]
-    RadiiVec = [1.0; 0.7]
-    x0Vec = [[-RadiiVec[1];0;0],[RadiiVec[2];0;0]]
+    # R = RadiiVec[1]
+    # qSpheres = [1.0]
+    # nSpheres = length(RadiiVec)
+
+    # # two spheres conjoined
+    RadiiVec = [0.6; 0.3]
+    x0Vec = [[-RadiiVec[1]+0.2;0;0],[RadiiVec[2]-0.1;0;0]]
     qSpheres = [1.0;1.5]
     nSpheres = length(RadiiVec);
+    R3 = 0.1
     
     # R = 1.0
-    R = 0.5
-    R1 = 0.7; R2 = 0.2; 
-    Rcil = 0.4; Zcil = 0.6;
-    ZCIL = [0;0;Zcil]
+    # R = 0.5
+    # R1 = 0.7; R2 = 0.2; 
+    # Rcil = 0.4; Zcil = 0.6;
+    # ZCIL = [0;0;Zcil]
 
-    pl=4;
-    h = 1.1*(2R+0.2)/(N)
-    println(1.1*(2R+0.2)/(N))
-    Xlim = [(-2.3)*1.1-pl*h; (1.5)*1.1+pl*h]
-    Ylim = [(-1.5)*1.1-pl*h; (1.5)*1.1+pl*h]
-    Zlim = [(-1.5)*1.1-pl*h; (1.5)*1.1+pl*h]
+    # pl=4;
+    # h = 1.1*(2R+0.2)/(N)
+    h = (Zlim2-Zlim1)/(N-1)
+    println("h = $h")
+    # println(1.1*(2R+0.2)/(N))
+    # Xlim = [(-2.3)*1.1-pl*h; (1.5)*1.1+pl*h]
+    # Ylim = [(-1.5)*1.1-pl*h; (1.5)*1.1+pl*h]
+    # Zlim = [(-1.5)*1.1-pl*h; (1.5)*1.1+pl*h]
+    Xlim = [Zlim1; Zlim2].+zcenter[1]
+    Ylim = [Zlim1; Zlim2].+zcenter[2]
+    Zlim = [Zlim1; Zlim2].+zcenter[3]
     # Xlim = [(-0.7)*1.1-pl*h; (0.7)*1.1+pl*h]
     # Ylim = [(-0.7)*1.1-pl*h; (0.7)*1.1+pl*h]
     # Zlim = [(-0.7)*1.1-pl*h; (0.7)*1.1+pl*h]
@@ -557,22 +570,46 @@ function PB_gen_shape_system(N;
         end
     end
 
-    # single sphere
+    # # single sphere
     # Pgammafun = (z -> Pgammafun_sphere(z,x0Vec[1],RadiiVec[1]) )
     # insidepoint = (z-> insidepoint_sphere(z,x0Vec[1],RadiiVec[1]) )
     # get_jac = (z-> get_jac_sphere(z,x0Vec[1],RadiiVec[1]) )
     # far_insidepoint = (z-> far_insidepoint_sphere(z,x0Vec[1],RadiiVec[1],ε) )
     # far_outsidepoint = (z-> far_outsidepoint_sphere(z,x0Vec[1],RadiiVec[1],ε) )
-    
+  
+
+    # # two spheres conjoined
+    delta = norm(x0Vec[1].-x0Vec[2])-RadiiVec[1]-RadiiVec[2];
+    L1 = RadiiVec[1]+R3
+    L2 = RadiiVec[2]+R3
+    L3 = RadiiVec[1]+RadiiVec[2]+delta
+    alpha = 0.5+(L1^2-L2^2)/(2L3^2)
+    x1a = x0Vec[1]
+    x2a = x0Vec[2]
+    x3a = x0Vec[1].+(alpha)*(x0Vec[2].-x0Vec[1])
+    a2 = sqrt(abs(L1^2-alpha^2*L3^2))
+    b2 = R3;
+    Xa = x0Vec[2].-x0Vec[1]
+    Ba = Xa/norm(Xa); 
+    Aa = [0;1;0.]
+    a3 = dot(Aa,Ba); a4 = norm(cross(Aa,Ba))
+    Ga = [a3 -a4 0;a4 a3 0;0 0 1];
+    u1a = Aa; u2a = Ba-a3*Aa; u2a /=norm(u2a); u3a = cross(Ba,Aa);
+    Fa = ([u1a u2a u3a])
+    Rottot = Fa*Ga*inv(Fa)
+    Rot3 = transpose(Rottot)
+
+    x4a = Rottot*[0;0;a2].+x3a
+    cone_compA = (1-2*(norm(x2a-x3a)>norm(x1a-x2a)))
+    sintC1 = a2/norm(x4a-x1a); costC1 = norm(x1a-x3a)/norm(x4a-x1a); tant = sintC1/costC1
+    cone_compB = (1-2*(norm(x1a-x3a)>norm(x1a-x2a)))
+    sintC2 = a2/norm(x4a-x2a); costC2 = norm(x2a-x3a)/norm(x4a-x2a); tant = sintC2/costC2
     # # two touching spheres
-    Pgammafun = Pgammafun_spheres
-    insidepoint = insidepoint_spheres
-    get_jac = get_jac_spheres
-    far_insidepoint = far_insidepoint_spheres
-    far_outsidepoint = far_outsidepoint_spheres
+    Pgammafun = ( z -> Pgammafun_2spheres(z, x1a, x2a, Rot3, Rottot, sintC1, costC1, sintC2, costC2, x3a, cone_compA, cone_compB, a2, b2, RadiiVec, x0Vec) )
+    insidepoint = ( z -> insidepoint_2spheres(z, x1a, x2a, Rot3, Rottot, sintC1, costC1, sintC2, costC2, x3a, cone_compA, cone_compB, a2, b2, RadiiVec) )
     
 
-    Nepsl2h=Int(ceil(2*ε/h)) # how many discretization points fall in the tubular neighborhood with these values of ε and h
+    Nepsl2h=Int(ceil(2*ε/h))+1 # how many discretization points fall in the tubular neighborhood with these values of ε and h
     h2 = h*h
     h3 = h2*h
 
@@ -585,22 +622,43 @@ function PB_gen_shape_system(N;
     
     rshift = xshift+shift;
     # discretizations in each direction, centered in rshift, with step h
-    X = [(rshift[1]:(-h):Xlim[1])[end:-1:1]; (rshift[1]+h):h:Xlim[2]]; Nx = length(X)
-    Y = [(rshift[2]:(-h):Ylim[1])[end:-1:1]; (rshift[2]+h):h:Ylim[2]]; Ny = length(Y)
-    Z = [(rshift[3]:(-h):Zlim[1])[end:-1:1]; (rshift[3]+h):h:Zlim[2]]; Nz = length(Z)
+    # X = [(rshift[1]:(-h):Xlim[1])[end:-1:1]; (rshift[1]+h):h:Xlim[2]]; Nx = length(X)
+    # Y = [(rshift[2]:(-h):Ylim[1])[end:-1:1]; (rshift[2]+h):h:Ylim[2]]; Ny = length(Y)
+    # Z = [(rshift[3]:(-h):Zlim[1])[end:-1:1]; (rshift[3]+h):h:Zlim[2]]; Nz = length(Z)
+    X = Array{Float64,1}(Xlim[1]:h:Xlim[2]); Nx = length(X)
+    Y = Array{Float64,1}(Ylim[1]:h:Ylim[2]); Ny = length(Y)
+    Z = Array{Float64,1}(Zlim[1]:h:Zlim[2]); Nz = length(Z)
     println("Computational box limits: X=$([X[1];X[end]]), Y=$([Y[1];Y[end]]), Z=$([Z[1];Z[end]])")
 
     Nvec = [Nx;Ny;Nz]
 
     println("Current run: h=$h, ε=$ε, Nepsl=$Nepsl2h")
-    println("Number of discretization points in each direction:\n$Nx x $Ny x $Nz = $(Nx*Ny*Nz)")
-
+    println("Number of discr. pts:\n$Nx x $Ny x $Nz = $(Nx*Ny*Nz)")
+    
+    if (Nx!=Ny || Nx!=Nz || Nz!=Ny)
+        @warn("Not a perfect discretization cube")
+    end
+    
     tau = h # cut-off parameter for function regularization in IBIMs
         
     epsl_ratio = epslE/epslI;
     # @time M, Pg, source, indIJK_to_M, indM_to_IJK, dsignes, ab_single_t, iv1_t, w_K11_single_t, w_K22_single_t, w_K21_single_t, target_normal = genCPM_corr_V2_PB(Pgammafun, insidepoint, far_insidepoint, far_outsidepoint, X, Y, Z, Nvec, ε, h; outflag=outflag, surfTargetXYZ=surfTargetXYZ, epsl_ratio=epsl_ratio, kappa_val=kappa_val)
 
-    @time M, Pg, source, indIJK_to_M, indM_to_IJK, dsignes, iv1, w_K11_single, w_K22_single, w_K21_single, normal, iv1_t, w_K11_single_t, w_K22_single_t, w_K21_single_t, target_normal = genCPM_corr_PB_system(Pgammafun, insidepoint, far_insidepoint, far_outsidepoint, X, Y, Z, Nvec, ε, h; outflag=outflag, surfTargetXYZ=surfTargetXYZ, epsl_ratio=epsl_ratio, kappa_val=kappa_val)
+    @time M, Pg, source, indIJK_to_M, indM_to_IJK, dsignes, iv1, w_K11_single, w_K22_single, w_K21_single, normal, iv1_t, w_K11_single_t, w_K22_single_t, w_K21_single_t, target_normal = genCPM_corr_PB_system(Pgammafun, insidepoint, X, Y, Z, Nvec, ε, h; outflag=outflag, surfTargetXYZ=surfTargetXYZ, epsl_ratio=epsl_ratio, kappa_val=kappa_val)
+
+
+    x = dsignes
+    open(newdir_nrun*"/plotting_N_$(N)_$(nrun[1])_$(count).grid","w") do io
+        writedlm(io,x)
+    end
+    xsource = zeros(M,3)
+    for i=1:M
+        xsource[i,:] = source[i]
+    end
+    x = xsource
+    open(newdir_nrun*"/plotting_N_$(N)_$(nrun[1])_$(count).node","w") do io
+        writedlm(io,x)
+    end
 
     # for i=1:n_surf_trg
     #     # surfTargetXYZ[i] = Pgammafun(surfTargetXYZ[i])
@@ -670,6 +728,12 @@ function PB_gen_shape_system(N;
     surf_val = zeros(2)
     surf_val[1] = sum(salvare_wo)*h3
     surf_val[2] = sum(salvare_w2)*h3
+
+
+    x = surf_val
+    open(newdir_nrun*"/surface_values_N_$(N)_$(nrun[1])_$(count).txt","w") do io
+        writedlm(io,x)
+    end
     
     println("Val. surface area:\n$(surf_val)")
 
@@ -810,15 +874,6 @@ function PB_gen_shape_system(N;
         # println(mval_err)
     end
 
-    # begin # building the matrix
-    #     MyMatrix = zeros(2M,2M);
-    #     for i=1:M
-    #         for j=1:M
-
-    #         end
-    #     end
-    # end
-
     # solving the PB problem
     begin # defining the functions and linear maps for solving system
         K11_IBIM_f = (α -> K11_PB_IBIM_target(α; source=source, normal=normal, salvare=salvare_wo, targets=source, tau=tau, kappa_val=kappa_val, theta_val=epsl_ratio)*h3)
@@ -856,12 +911,21 @@ function PB_gen_shape_system(N;
     end
 
     begin # solving the system with GMRES
-        PsiAll_corr = gmres(corr_L, [g1;g2]; verbose=true)
-        PsiAll_IBIM = gmres(IBIM_L, [g1;g2]; verbose=true)
-        psi_IBIM = PsiAll_IBIM[1:M]
-        psin_IBIM = PsiAll_IBIM[M+1:2M]
+        PsiAll_corr = gmres(corr_L, [g1;g2]; verbose=true, abstol=2e-5, reltol=2e-5)
         psi_corr = PsiAll_corr[1:M]
         psin_corr = PsiAll_corr[M+1:2M]
+        x = PsiAll_corr
+        open(newdir_nrun*"/plotting_corr_N_$(N)_$(nrun[1])_$(count).potent","w") do io
+            writedlm(io,x)
+        end
+        
+        PsiAll_IBIM = gmres(IBIM_L, [g1;g2]; verbose=true, abstol=2e-5, reltol=2e-5)
+        psi_IBIM = PsiAll_IBIM[1:M]
+        psin_IBIM = PsiAll_IBIM[M+1:2M]
+        x = PsiAll_IBIM
+        open(newdir_nrun*"/plotting_IBIM_N_$(N)_$(nrun[1])_$(count).potent","w") do io
+            writedlm(io,x)
+        end
     end
     begin # polarization energy computation 
         psi_rxn_IBIM(z) = h3*sum( salvareu .* ([ G0Gk(z,source[m],kappa_val)*psin_IBIM[m] for m=1:M] .- [dGny_diff(z,source[m],normal[m],kappa_val,epsl_ratio)*psi_IBIM[m] for m=1:M] ) )
@@ -873,6 +937,11 @@ function PB_gen_shape_system(N;
             Gpol_corr += qSpheres[i]*psi_rxn_corr(x0Vec[i])
         end
         Gpol_IBIM *= 0.5; Gpol_corr *= 0.5;
+
+        x = [Gpol_IBIM; Gpol_corr]
+        open(newdir_nrun*"/Gpol_values_N_$(N)_$(nrun[1])_$(count).txt","w") do io
+            writedlm(io,x)
+        end
     end
 
     begin # errors from analytic values
@@ -901,10 +970,10 @@ function PB_gen_shape_system(N;
         # println()
     end
  
-    x=[ R, R1, R2]
-    open(newdir_nrun*"/surfacePB_R_R1_R2_Rcil_data_$(nrun[1])_$(count).dat","w") do io
-        writedlm(io,x)
-    end
+    # x=[ R, R1, R2]
+    # open(newdir_nrun*"/surfacePB_R_R1_R2_Rcil_data_$(nrun[1])_$(count).dat","w") do io
+    #     writedlm(io,x)
+    # end
 
     x=[ RadiiVec, nSpheres]
     open(newdir_nrun*"/surfacePB_Radii_nSpheres_data_$(nrun[1])_$(count).dat","w") do io
@@ -920,7 +989,7 @@ function PB_gen_shape_system(N;
     open(newdir_nrun*"/surfacePB_abc_xshift_data_$(nrun[1])_$(count).dat","w") do io
         writedlm(io,x)
     end
-    x=[ kappa_val, epslE, epslI, R]
+    x=[ kappa_val, epslE, epslI, R3]
     open(newdir_nrun*"/surfacePB_kappa_epslEI_data_$(nrun[1])_$(count).dat","w") do io
         writedlm(io,x)
     end

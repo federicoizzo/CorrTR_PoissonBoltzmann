@@ -316,7 +316,7 @@ function Pgamma_torus(z,Rv2,Rinv,R1,R2,xshift)
     ctmp = R1*[cos(phi);sin(phi);0];
     return Rv2*((zn.-ctmp)/norm(zn.-ctmp)*R2.+ctmp).+xshift
 end
-function insidepoint(z,Rinv,R1,R2,xshift)
+function insidepoint_torus(z,Rinv,R1,R2,xshift)
     zn = Rinv*(z.-xshift);
     phi = atan(zn[2],zn[1]);
     ctmp = R1*[cos(phi);sin(phi);0];
@@ -687,6 +687,46 @@ function far_outsidepoint_spheres(z)
       pz1 = Pgamma_circle(z,Rvec[1],v)
       pz2 = Pgamma_circle(z,Rvec[2],w)
       return (norm(z-pz1)<norm(z-pz2))*(norm(z-v)>Rvec[1]+ε) .+ (norm(z-pz1)>=norm(z-pz2))*(norm(z-w)>Rvec[2]+ε)
+  end
+end
+
+function Pgammafun_2spheres(z, x1a, x2a, Rot3, Rottot, sintC1, costC1, sintC2, costC2, x3a, cone_compA, cone_compB, a2, b2, RadiiVec, x0Vec)
+  p2a = Rx(-pi*0.5)*Rot3*(z.-x1a)
+  p3a = Rx(pi*0.5)*Rot3*(z.-x2a)
+  p2va = isInCone(sintC1, costC1, norm(x1a-x3a),p2a, cone_compA)
+  p3va = isInCone(sintC2, costC2, norm(x2a-x3a),p3a, cone_compB)
+  if ( (cone_compA*cone_compB>0) && (p2va || p3va) ) || ( (cone_compA<0) && (p3va && ~p2va) ) || ( (cone_compB<0) && (p2va && ~p3va) )
+      RotX = Rottot*Rx(-pi*0.5)
+      RotXinv = transpose(RotX)
+      return Pgamma_torus(z,RotX,RotXinv,a2,b2,x3a)
+  else
+      Pz1 = Pgamma_circle(z, RadiiVec[1], x0Vec[1])
+      Pz2 = Pgamma_circle(z, RadiiVec[2], x0Vec[2])
+      if norm(z.-x1a)<RadiiVec[1]
+          return Pz1
+      elseif norm(z.-x2a)<RadiiVec[2]
+          return Pz2
+      else
+          return (norm(z-Pz1)<norm(z-Pz2))*Pz1 .+ (norm(z-Pz1)>=norm(z-Pz2))*Pz2
+      end
+  end
+end
+function insidepoint_2spheres(z, x1a, x2a, Rot3, Rottot, sintC1, costC1, sintC2, costC2, x3a, cone_compA, cone_compB, a2, b2, RadiiVec)
+  p2a = Rx(-pi*0.5)*Rot3*(z.-x1a)
+  p3a = Rx(pi*0.5)*Rot3*(z.-x2a)
+  p2va = isInCone(sintC1, costC1, norm(x1a-x3a),p2a, cone_compA)
+  p3va = isInCone(sintC2, costC2, norm(x2a-x3a),p3a, cone_compB)
+  if ( (cone_compA*cone_compB>0) && (p2va || p3va) ) || ( (cone_compA<0) && (p3va && ~p2va) ) || ( (cone_compB<0) && (p2va && ~p3va) )
+      RotX = Rottot*Rx(-pi*0.5)
+      RotXinv = transpose(RotX)
+      return !insidepoint_torus(z,RotXinv,a2,b2,x3a)
+      # return Pgamma_torus(z,RotX,RotXinv,a2,b2,x3a)
+  elseif norm(z.-x1a)<RadiiVec[1]
+      return true
+  elseif norm(z.-x2a)<RadiiVec[2]
+      return true
+  else
+      return false
   end
 end
 
@@ -1548,19 +1588,19 @@ function genCPM_corr_V2_PB( Pgammafun::Function, insidepoint::Function, far_insi
   iv1_t, w_K11_single_t, w_K22_single_t, w_K21_single_t, target_normal
 end
 
-function genCPM_corr_PB_system( Pgammafun::Function, insidepoint::Function, far_insidepoint::Function, far_outsidepoint::Function, X::Array{Float64,1}, Y::Array{Float64,1}, Z::Array{Float64,1}, Nvec::Array{Int,1}, epsl::Real, h::Real; outflag::Bool=true, surfTargetXYZ=[[1;0;0]], epsl_ratio::Real=1.0, kappa_val::Real=1.0 )
+function genCPM_corr_PB_system( Pgammafun::Function, insidepoint::Function, X::Array{Float64,1}, Y::Array{Float64,1}, Z::Array{Float64,1}, Nvec::Array{Int,1}, epsl::Real, h::Real; outflag::Bool=true, surfTargetXYZ=[[1;0;0]], epsl_ratio::Real=1.0, kappa_val::Real=1.0 )
 
   secondt_const = 0.25/pi
 
   @time begin
     # inside or outside in the sense: exterior or interior domains are considered; nodes far enough away are considered, so no singularity or near singularity for solution evaluation
 
-    insidefun(z) = true;
-    if outflag
-      insidefun = far_outsidepoint
-    else
-      insidefun = far_insidepoint
-    end
+    # insidefun(z) = true;
+    # if outflag
+    #   insidefun = far_outsidepoint
+    # else
+    #   insidefun = far_insidepoint
+    # end
 
     Nx, Ny, Nz = Nvec
     M_t = length(surfTargetXYZ)
@@ -2080,7 +2120,7 @@ function K11_PB_Q1corr_target(α::Array{Float64,1}; source::Array{Array{Float64,
   Mm = length(α)
   Aα = Array{Float64,1}(undef,Mt);
 
-  for m=1:Mt
+  @threads for m=1:Mt
       ind_1 = Array{Int64,1}(1:Mm);
       setdiff!( ind_1, iv1[m] )
       Aα[m] = sum( [ α[l] * salvare[l] * dGny_diff(targets[m], source[l], normal[l], kappa_val, theta_val) for l in ind_1 ] )*h^3
@@ -2139,7 +2179,7 @@ function K22_PB_Q1corr_target(α::Array{Float64,1}; source::Array{Array{Float64,
   Mm = length(α)
   Aα = Array{Float64,1}(undef,Mt);
 
-  for m=1:Mt
+  @threads for m=1:Mt
       ind_1 = Array{Int64,1}(1:Mm);
       setdiff!( ind_1, iv1[m] )
       Aα[m] = sum( [ α[l] * salvare[l] * dGnx_diff(targets[m], source[l], targetnormals[m], kappa_val, theta_val) for l in ind_1 ] )*h^3
@@ -2164,7 +2204,7 @@ function K21_PB_Q1corr_target(α::Array{Float64,1}; source::Array{Array{Float64,
   Mm = length(α)
   Aα = Array{Float64,1}(undef,Mt);
 
-  for m=1:Mt
+  @threads for m=1:Mt
       ind_1 = Array{Int64,1}(1:Mm);
       setdiff!( ind_1, iv1[m] )
       Aα[m] = sum( [ α[l] * salvare[l] * d2G_diff(targets[m], source[l], targetnormals[m], normal[l], kappa_val) for l in ind_1 ] )*h^3
@@ -2188,7 +2228,7 @@ function K12_PB_Q1corr_target(α::Array{Float64,1}; source::Array{Array{Float64,
   Mm = length(α)
   Aα = Array{Float64,1}(undef,Mt);
 
-  for m=1:Mt
+  @threads for m=1:Mt
       ind_1 = Array{Int64,1}(1:Mm);
       setdiff!( ind_1, iv1[m] )
       Aα[m] = sum( [ α[l] * salvare[l] * G0Gk(targets[m], source[l], kappa_val) for l in ind_1 ] )*h^3
@@ -2255,7 +2295,7 @@ K22_PB_Q1corr_target2d(ones(20))
 function K11_PB_IBIM_target(α::Array{Float64,1}; source::Array{Array{Float64,1},1}=tmprand, normal::Array{Array{Float64,1},1}=tmprand, salvare::Array{Float64,1}=tmprands, targets::Array{Array{Float64,1},1}=tmprand, kappa_val::Real=1.0, theta_val::Real=1.0, tau::Real=0.1)
   Mm = length(targets)
   Aα = Array{Float64,1}(undef,Mm);
-  for i=1:Mm
+  @threads for i=1:Mm
     Aα[i] = sum( [ α[j] * salvare[j] * K11_PB(targets[i], source[j], normal[j], kappa_val, theta_val, tau) for j in 1:length(α) ] )
   end
   return Aα
@@ -2267,7 +2307,7 @@ K11_PB_IBIM_target(ones(20))
 function K22_PB_IBIM_target(α::Array{Float64,1}; source::Array{Array{Float64,1},1}=tmprand, salvare::Array{Float64,1}=tmprands, targets::Array{Array{Float64,1},1}=tmprand, targetnormals::Array{Array{Float64,1},1}=tmprand, kappa_val::Real=1.0, theta_val::Real=1.0, tau::Real=0.1)
   Mm = length(targets)
   Aα = Array{Float64,1}(undef,Mm);
-  for i=1:Mm
+  @threads for i=1:Mm
     Aα[i] = sum( [ α[j] * salvare[j] * K22_PB(targets[i], source[j], targetnormals[i], kappa_val, theta_val, tau) for j in 1:length(α) ] )
   end
   return Aα
@@ -2279,7 +2319,7 @@ K22_PB_IBIM_target(ones(20))
 function K21_PB_IBIM_target(α::Array{Float64,1}; source::Array{Array{Float64,1},1}=tmprand, normal::Array{Array{Float64,1},1}=tmprand, salvare::Array{Float64,1}=tmprands, targets::Array{Array{Float64,1},1}=tmprand, targetnormals::Array{Array{Float64,1},1}=tmprand, kappa_val::Real=1.0, tau::Real=0.1)
   Mm = length(targets)
   Aα = Array{Float64,1}(undef,Mm);
-  for i=1:Mm
+  @threads for i=1:Mm
     Aα[i] = sum( [ α[j] * salvare[j] * K21_PB(targets[i], source[j], targetnormals[i], normal[j], kappa_val, tau) for j in 1:length(α) ] )
   end
   return Aα
@@ -2291,7 +2331,7 @@ K21_PB_IBIM_target(ones(20))
 function K12_PB_IBIM_target(α::Array{Float64,1}; source::Array{Array{Float64,1},1}=tmprand, salvare::Array{Float64,1}=tmprands, targets::Array{Array{Float64,1},1}=tmprand, kappa_val::Real=1.0, tau::Real=0.1)
   Mm = length(targets)
   Aα = Array{Float64,1}(undef,Mm);
-  for i=1:Mm
+  @threads for i=1:Mm
     Aα[i] = sum( [ α[j] * salvare[j] * K12_PB(targets[i], source[j], kappa_val, tau) for j in 1:length(α) ] )
   end
   return Aα

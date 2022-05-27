@@ -37,6 +37,7 @@ using LinearAlgebra
 using Statistics
 using IterativeSolvers
 using LinearMaps
+using Base.Threads
 
 nrun = [0] # run counter initialization
 

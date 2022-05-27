@@ -452,7 +452,7 @@ end
 # plotting_comparison_1(hval, val_abs, surf_val, newdir, nrun[1], "spheres", detail)
 
 # solving system on sphere
-if ~false  # ε~2h test on the spheres 
+if ~false  # ε~2h test on the surfaces
   nrunf!(nrun)
 
   Ttarget = readdlm(path*"/2022/2022-03/2022-03-21/14/surface_tp_14_trg_t.dat")[:,1]
@@ -474,7 +474,8 @@ if ~false  # ε~2h test on the spheres
   # Nvec = 64:8:400
   # Nvec = 64:8:300
   # Nvec = [40;64;80]
-  Nvec = [23]
+  # Nvec = [23]
+  Nvec = [20;40;80]
   # Nvec = 64:8:248
   # Nvec = 64:10:224
   
@@ -503,7 +504,8 @@ if ~false  # ε~2h test on the spheres
       println("\nRun $i/$nmax")
       local h = 0.1
       ε = 0.1
-      @time hval[i], val_abs[:,:,i], mval_abs[:,i], surf_val[:,i], errvec[i,:,:] = PB_gen_shape_system( Nvec[i]; surfTargetXYZ=TPtargets, shift=shift, epslI=1.0, epslE=80.0, kappa_val=0.1257, fε=fε, plotting_surface=(i==0), count=i)
+      # @time hval[i], val_abs[:,:,i], mval_abs[:,i], surf_val[:,i], errvec[i,:,:] = PB_gen_shape_system( Nvec[i]; surfTargetXYZ=TPtargets, shift=shift, epslI=1.0, epslE=80.0, kappa_val=0.1257, fε=fε, plotting_surface=(i==0), count=i, Zlim1=-0.75, Zlim2=0.75, zcenter=zeros(3) )
+      @time hval[i], val_abs[:,:,i], mval_abs[:,i], surf_val[:,i], errvec[i,:,:] = PB_gen_shape_system( Nvec[i]; surfTargetXYZ=TPtargets, shift=shift, epslI=1.0, epslE=80.0, kappa_val=0.1257, fε=fε, plotting_surface=(i==0), count=i, Zlim1=-1.5, Zlim2=1.0, zcenter=zeros(3) )
       GC.gc()
   end
   x = detail;
