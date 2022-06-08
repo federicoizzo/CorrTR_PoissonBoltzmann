@@ -393,18 +393,18 @@ function PB_gen_shape_system(N;
     )
 
     # # single sphere
-    # x0Vec = [zeros(3)]
-    # RadiiVec = [0.5]
-    # R = RadiiVec[1]
-    # qSpheres = [1.0]
-    # nSpheres = length(RadiiVec)
+    x0Vec = [zeros(3)]
+    RadiiVec = [0.5]
+    R = RadiiVec[1]
+    qSpheres = [1.0]
+    nSpheres = length(RadiiVec)
 
     # # two spheres conjoined
-    RadiiVec = [0.6; 0.3]
-    x0Vec = [[-RadiiVec[1]+0.2;0;0],[RadiiVec[2]-0.1;0;0]]
-    qSpheres = [1.0;1.5]
-    nSpheres = length(RadiiVec);
-    R3 = 0.1
+    # RadiiVec = [0.6; 0.3]
+    # x0Vec = [[-RadiiVec[1]+0.2;0;0],[RadiiVec[2]-0.1;0;0]]
+    # qSpheres = [1.0;1.5]
+    # nSpheres = length(RadiiVec);
+    # R3 = 0.1
     
     # R = 1.0
     # R = 0.5
@@ -414,7 +414,8 @@ function PB_gen_shape_system(N;
 
     # pl=4;
     # h = 1.1*(2R+0.2)/(N)
-    h = (Zlim2-Zlim1)/(N-1)
+    # h = (Zlim2-Zlim1)/(N-1)
+    h = (Zlim2-Zlim1)/(N)
     println("h = $h")
     # println(1.1*(2R+0.2)/(N))
     # Xlim = [(-2.3)*1.1-pl*h; (1.5)*1.1+pl*h]
@@ -571,42 +572,42 @@ function PB_gen_shape_system(N;
     end
 
     # # single sphere
-    # Pgammafun = (z -> Pgammafun_sphere(z,x0Vec[1],RadiiVec[1]) )
-    # insidepoint = (z-> insidepoint_sphere(z,x0Vec[1],RadiiVec[1]) )
-    # get_jac = (z-> get_jac_sphere(z,x0Vec[1],RadiiVec[1]) )
-    # far_insidepoint = (z-> far_insidepoint_sphere(z,x0Vec[1],RadiiVec[1],ε) )
-    # far_outsidepoint = (z-> far_outsidepoint_sphere(z,x0Vec[1],RadiiVec[1],ε) )
+    Pgammafun = (z -> Pgammafun_sphere(z,x0Vec[1],RadiiVec[1]) )
+    insidepoint = (z-> insidepoint_sphere(z,x0Vec[1],RadiiVec[1]) )
+    get_jac = (z-> get_jac_sphere(z,x0Vec[1],RadiiVec[1]) )
+    far_insidepoint = (z-> far_insidepoint_sphere(z,x0Vec[1],RadiiVec[1],ε) )
+    far_outsidepoint = (z-> far_outsidepoint_sphere(z,x0Vec[1],RadiiVec[1],ε) )
   
 
     # # two spheres conjoined
-    delta = norm(x0Vec[1].-x0Vec[2])-RadiiVec[1]-RadiiVec[2];
-    L1 = RadiiVec[1]+R3
-    L2 = RadiiVec[2]+R3
-    L3 = RadiiVec[1]+RadiiVec[2]+delta
-    alpha = 0.5+(L1^2-L2^2)/(2L3^2)
-    x1a = x0Vec[1]
-    x2a = x0Vec[2]
-    x3a = x0Vec[1].+(alpha)*(x0Vec[2].-x0Vec[1])
-    a2 = sqrt(abs(L1^2-alpha^2*L3^2))
-    b2 = R3;
-    Xa = x0Vec[2].-x0Vec[1]
-    Ba = Xa/norm(Xa); 
-    Aa = [0;1;0.]
-    a3 = dot(Aa,Ba); a4 = norm(cross(Aa,Ba))
-    Ga = [a3 -a4 0;a4 a3 0;0 0 1];
-    u1a = Aa; u2a = Ba-a3*Aa; u2a /=norm(u2a); u3a = cross(Ba,Aa);
-    Fa = ([u1a u2a u3a])
-    Rottot = Fa*Ga*inv(Fa)
-    Rot3 = transpose(Rottot)
+    # delta = norm(x0Vec[1].-x0Vec[2])-RadiiVec[1]-RadiiVec[2];
+    # L1 = RadiiVec[1]+R3
+    # L2 = RadiiVec[2]+R3
+    # L3 = RadiiVec[1]+RadiiVec[2]+delta
+    # alpha = 0.5+(L1^2-L2^2)/(2L3^2)
+    # x1a = x0Vec[1]
+    # x2a = x0Vec[2]
+    # x3a = x0Vec[1].+(alpha)*(x0Vec[2].-x0Vec[1])
+    # a2 = sqrt(abs(L1^2-alpha^2*L3^2))
+    # b2 = R3;
+    # Xa = x0Vec[2].-x0Vec[1]
+    # Ba = Xa/norm(Xa); 
+    # Aa = [0;1;0.]
+    # a3 = dot(Aa,Ba); a4 = norm(cross(Aa,Ba))
+    # Ga = [a3 -a4 0;a4 a3 0;0 0 1];
+    # u1a = Aa; u2a = Ba-a3*Aa; u2a /=norm(u2a); u3a = cross(Ba,Aa);
+    # Fa = ([u1a u2a u3a])
+    # Rottot = Fa*Ga*inv(Fa)
+    # Rot3 = transpose(Rottot)
 
-    x4a = Rottot*[0;0;a2].+x3a
-    cone_compA = (1-2*(norm(x2a-x3a)>norm(x1a-x2a)))
-    sintC1 = a2/norm(x4a-x1a); costC1 = norm(x1a-x3a)/norm(x4a-x1a); tant = sintC1/costC1
-    cone_compB = (1-2*(norm(x1a-x3a)>norm(x1a-x2a)))
-    sintC2 = a2/norm(x4a-x2a); costC2 = norm(x2a-x3a)/norm(x4a-x2a); tant = sintC2/costC2
-    # # two touching spheres
-    Pgammafun = ( z -> Pgammafun_2spheres(z, x1a, x2a, Rot3, Rottot, sintC1, costC1, sintC2, costC2, x3a, cone_compA, cone_compB, a2, b2, RadiiVec, x0Vec) )
-    insidepoint = ( z -> insidepoint_2spheres(z, x1a, x2a, Rot3, Rottot, sintC1, costC1, sintC2, costC2, x3a, cone_compA, cone_compB, a2, b2, RadiiVec) )
+    # x4a = Rottot*[0;0;a2].+x3a
+    # cone_compA = (1-2*(norm(x2a-x3a)>norm(x1a-x2a)))
+    # sintC1 = a2/norm(x4a-x1a); costC1 = norm(x1a-x3a)/norm(x4a-x1a); tant = sintC1/costC1
+    # cone_compB = (1-2*(norm(x1a-x3a)>norm(x1a-x2a)))
+    # sintC2 = a2/norm(x4a-x2a); costC2 = norm(x2a-x3a)/norm(x4a-x2a); tant = sintC2/costC2
+    # # # two touching spheres
+    # Pgammafun = ( z -> Pgammafun_2spheres(z, x1a, x2a, Rot3, Rottot, sintC1, costC1, sintC2, costC2, x3a, cone_compA, cone_compB, a2, b2, RadiiVec, x0Vec) )
+    # insidepoint = ( z -> insidepoint_2spheres(z, x1a, x2a, Rot3, Rottot, sintC1, costC1, sintC2, costC2, x3a, cone_compA, cone_compB, a2, b2, RadiiVec) )
     
 
     Nepsl2h=Int(ceil(2*ε/h))+1 # how many discretization points fall in the tubular neighborhood with these values of ε and h
@@ -722,6 +723,7 @@ function PB_gen_shape_system(N;
     salvare_wo = salvare_ker # missing h3
     salvare_w2 = salvare_ker.*salvare_jac_2nd # missing h3
     salvareu = salvare_w2
+    # salvareu = salvare_ker
 
     # println(salvareu)
     
@@ -989,7 +991,7 @@ function PB_gen_shape_system(N;
     open(newdir_nrun*"/surfacePB_abc_xshift_data_$(nrun[1])_$(count).dat","w") do io
         writedlm(io,x)
     end
-    x=[ kappa_val, epslE, epslI, R3]
+    x=[ kappa_val, epslE, epslI]
     open(newdir_nrun*"/surfacePB_kappa_epslEI_data_$(nrun[1])_$(count).dat","w") do io
         writedlm(io,x)
     end

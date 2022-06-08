@@ -1608,7 +1608,7 @@ function genCPM_corr_PB_system( Pgammafun::Function, insidepoint::Function, X::A
     indIJK_to_M = -ones(Int64,Nx,Ny,Nz); # to go from ijk to m-index; initialized as -1
     Pg = Array{Float64,4}(undef,Nx,Ny,Nz,3) # 3D projection array for every index i,j,k,1:3 for each component
     dsignes = Array{Float64,3}(undef,Nx,Ny,Nz) # for every index ijk, signed distance (for curvature)
-    Mtemp = Int(ceil(4.4*Nx^2.9/5)); # initialization size for how many interior points to the domain
+    Mtemp = Int(ceil(4.4*Nx^2.9/3)); # initialization size for how many interior points to the domain
     
     PΓ = Array{Array{Float64,1},1}(undef,Mtemp) # projection mapping for m-indices
     indM_to_IJK = zeros(Int64,Mtemp,3); # indices from m to ijk
