@@ -381,7 +381,7 @@ function PB_gen_shape_WENO(N;
     return h, val_abs, val_err, mval_abs, mval_err, surf_val
 end
 
-function PB_gen_shape_system(N;
+function PB_gen_shape_system(h, N;
     w_ker::Function = Kinf, # averaging kernel
     surfTargetXYZ::Array{Array{Float64,1},1}=[[1;0.;0]], # surface targets: identified via 3D point, then projected
     outflag::Bool=true,  # interior or exterior problem: true for exterior
@@ -389,7 +389,8 @@ function PB_gen_shape_system(N;
     epslI::Real=1.0, epslE::Real=1.0, kappa_val::Real=1.0,
     fε::Function=(t->2t), # function to get espilon from h
     plotting_surface::Bool=false, count::Int64=1,
-    Zlim1::Real=-1,  Zlim2::Real=1, zcenter::Array{Float64,1}=[0.;0.;0.]
+    Zlim1::Real=-1,  Zlim2::Real=1, zcenter::Array{Float64,1}=[0.;0.;0.],
+    hflag::Bool=false, Jflag::Bool=false
     )
 
     # # single sphere
@@ -415,15 +416,19 @@ function PB_gen_shape_system(N;
     # pl=4;
     # h = 1.1*(2R+0.2)/(N)
     # h = (Zlim2-Zlim1)/(N-1)
-    h = (Zlim2-Zlim1)/(N)
-    println("h = $h")
+    if hflag
+        N = ceil(Int((Zlim2-Zlim1)/h))
+    else
+        h = (Zlim2-Zlim1)/(N)
+    end
+    println("h = $h, N = $N")
     # println(1.1*(2R+0.2)/(N))
     # Xlim = [(-2.3)*1.1-pl*h; (1.5)*1.1+pl*h]
     # Ylim = [(-1.5)*1.1-pl*h; (1.5)*1.1+pl*h]
     # Zlim = [(-1.5)*1.1-pl*h; (1.5)*1.1+pl*h]
-    Xlim = [Zlim1; Zlim2].+zcenter[1]
-    Ylim = [Zlim1; Zlim2].+zcenter[2]
-    Zlim = [Zlim1; Zlim2].+zcenter[3]
+    Xlim = [Zlim1-2h; Zlim2+2h].+zcenter[1]
+    Ylim = [Zlim1-2h; Zlim2+2h].+zcenter[2]
+    Zlim = [Zlim1-2h; Zlim2+2h].+zcenter[3]
     # Xlim = [(-0.7)*1.1-pl*h; (0.7)*1.1+pl*h]
     # Ylim = [(-0.7)*1.1-pl*h; (0.7)*1.1+pl*h]
     # Zlim = [(-0.7)*1.1-pl*h; (0.7)*1.1+pl*h]
@@ -722,9 +727,11 @@ function PB_gen_shape_system(N;
     
     salvare_wo = salvare_ker # missing h3
     salvare_w2 = salvare_ker.*salvare_jac_2nd # missing h3
-    salvareu = salvare_w2
-    # salvareu = salvare_ker
-
+    if Jflag
+        salvareu = salvare_ker
+    else
+        salvareu = salvare_w2
+    end
     # println(salvareu)
     
     surf_val = zeros(2)

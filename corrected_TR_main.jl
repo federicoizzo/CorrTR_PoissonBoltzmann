@@ -658,6 +658,109 @@ if false  # ε~2h test on the surfaces
   end
 end
 
+if ~false  # ε~4h test on the surfaces
+  nrunf!(nrun)
+
+  Ttarget = readdlm(path*"/2022/2022-03/2022-03-21/14/surface_tp_14_trg_t.dat")[:,1]
+  Ptarget = readdlm(path*"/2022/2022-03/2022-03-21/14/surface_tp_14_trg_p.dat")[:,1]
+  
+  TPtargets = [ [Ttarget[i];Ptarget[i];(0.5*Ttarget[i]-0.12)] for i=1:length(Ttarget) ]
+
+  Ntargets = length(Ttarget)
+  println("Number of targets = $(Ntargets)")
+
+  x = TPtargets;
+  open(newdir_nrun*"/torus_err_const_$(nrun[1])_trg_xyz.dat","w") do io
+    writedlm(io,x)
+  end
+
+  # Nvec = 64:10:404
+  # Nvec = 64:10:304
+  # Nvec = 64:10:264
+  # Nvec = 64:8:400
+  # Nvec = 64:8:300
+  # Nvec = [40;64;80]
+  # Nvec = [23]
+  Nvec = [20;40;80]
+  Hvec = 0.075*(2.0.^(0:-1:-2))
+  # Nvec = [25;50;100]
+  # Nvec = 64:8:248
+  # Nvec = 64:10:224
+  
+  # fε(x) = (0.30*x.^0.5)
+  # fε(x) = (2*x.^0.8)
+  fε(x) = 4x
+  # fε(x) = 2x
+  # detail = "epsl03h05"
+  # detail = "epsl2h08"
+  detail = "epsl4h"
+  # detail = "epsl2h"
+
+  nmax = length(Nvec)
+  errvec = zeros(nmax,2,3)
+  hval = zeros(nmax)
+  mval_abs = zeros(8,nmax)
+  mval_err = zeros(4,nmax)
+  surf_val= zeros(2,nmax)
+  
+  val_abs = zeros(8,Ntargets,nmax)
+  val_err = zeros(4,Ntargets,nmax)
+
+  shift=[0.026834;0.01346254;-0.06293856]
+
+  @time for i=1:nmax
+      println("\nRun $i/$nmax")
+      local h = 0.1
+      ε = 0.1
+      # @time hval[i], val_abs[:,:,i], mval_abs[:,i], surf_val[:,i], errvec[i,:,:] = PB_gen_shape_system( Nvec[i]; surfTargetXYZ=TPtargets, shift=shift, epslI=1.0, epslE=80.0, kappa_val=0.1257, fε=fε, plotting_surface=(i==0), count=i, Zlim1=-0.75, Zlim2=0.75, zcenter=zeros(3) )
+      @time hval[i], val_abs[:,:,i], mval_abs[:,i], surf_val[:,i], errvec[i,:,:] = PB_gen_shape_system( Hvec[i], Nvec[i]; surfTargetXYZ=TPtargets, shift=shift, epslI=1.0, epslE=80.0, kappa_val=0.1257, fε=fε, plotting_surface=(i==0), count=i, Zlim1=-.75, Zlim2=.75, zcenter=zeros(3), hflag=true )
+      GC.gc()
+  end
+  x = detail;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_detail.dat","w") do io
+    writedlm(io,x)
+  end
+  x = hval;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_hvals.dat","w") do io
+    writedlm(io,x)
+  end
+  x = errvec;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_errvec.dat","w") do io
+    writedlm(io,x)
+  end
+  x = val_abs;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_abs.dat","w") do io
+    writedlm(io,x)
+  end
+  x = val_err;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_err.dat","w") do io
+    writedlm(io,x)
+  end
+  x = size(val_abs);
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_size.dat","w") do io
+    writedlm(io,x)
+  end
+  x = size(val_err);
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_err_size.dat","w") do io
+    writedlm(io,x)
+  end
+  x = mval_abs;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_abs_means.dat","w") do io
+    writedlm(io,x)
+  end
+  x = mval_err;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_err_means.dat","w") do io
+    writedlm(io,x)
+  end
+  x = surf_val;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_surf_val.dat","w") do io
+    writedlm(io,x)
+  end
+  x = size(surf_val);
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_surf_val_size.dat","w") do io
+    writedlm(io,x)
+  end
+end
 if ~false  # ε~2h test on the surfaces
   nrunf!(nrun)
 
@@ -681,8 +784,9 @@ if ~false  # ε~2h test on the surfaces
   # Nvec = 64:8:300
   # Nvec = [40;64;80]
   # Nvec = [23]
-  # Nvec = [20;40;80]
-  Nvec = [25;50;100]
+  Nvec = [20;40;80]
+  Hvec = 0.075*(2.0.^(0:-1:-2))
+  # Nvec = [25;50;100]
   # Nvec = 64:8:248
   # Nvec = 64:10:224
   
@@ -712,7 +816,214 @@ if ~false  # ε~2h test on the surfaces
       local h = 0.1
       ε = 0.1
       # @time hval[i], val_abs[:,:,i], mval_abs[:,i], surf_val[:,i], errvec[i,:,:] = PB_gen_shape_system( Nvec[i]; surfTargetXYZ=TPtargets, shift=shift, epslI=1.0, epslE=80.0, kappa_val=0.1257, fε=fε, plotting_surface=(i==0), count=i, Zlim1=-0.75, Zlim2=0.75, zcenter=zeros(3) )
-      @time hval[i], val_abs[:,:,i], mval_abs[:,i], surf_val[:,i], errvec[i,:,:] = PB_gen_shape_system( Nvec[i]; surfTargetXYZ=TPtargets, shift=shift, epslI=1.0, epslE=80.0, kappa_val=0.1257, fε=fε, plotting_surface=(i==0), count=i, Zlim1=-1.5, Zlim2=1.0, zcenter=zeros(3) )
+      @time hval[i], val_abs[:,:,i], mval_abs[:,i], surf_val[:,i], errvec[i,:,:] = PB_gen_shape_system( Hvec[i], Nvec[i]; surfTargetXYZ=TPtargets, shift=shift, epslI=1.0, epslE=80.0, kappa_val=0.1257, fε=fε, plotting_surface=(i==0), count=i, Zlim1=-.75, Zlim2=.75, zcenter=zeros(3), hflag=true )
+      GC.gc()
+  end
+  x = detail;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_detail.dat","w") do io
+    writedlm(io,x)
+  end
+  x = hval;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_hvals.dat","w") do io
+    writedlm(io,x)
+  end
+  x = errvec;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_errvec.dat","w") do io
+    writedlm(io,x)
+  end
+  x = val_abs;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_abs.dat","w") do io
+    writedlm(io,x)
+  end
+  x = val_err;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_err.dat","w") do io
+    writedlm(io,x)
+  end
+  x = size(val_abs);
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_size.dat","w") do io
+    writedlm(io,x)
+  end
+  x = size(val_err);
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_err_size.dat","w") do io
+    writedlm(io,x)
+  end
+  x = mval_abs;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_abs_means.dat","w") do io
+    writedlm(io,x)
+  end
+  x = mval_err;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_err_means.dat","w") do io
+    writedlm(io,x)
+  end
+  x = surf_val;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_surf_val.dat","w") do io
+    writedlm(io,x)
+  end
+  x = size(surf_val);
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_surf_val_size.dat","w") do io
+    writedlm(io,x)
+  end
+end
+
+if ~false  # J=1, ε~4h test on the surfaces
+  nrunf!(nrun)
+
+  Ttarget = readdlm(path*"/2022/2022-03/2022-03-21/14/surface_tp_14_trg_t.dat")[:,1]
+  Ptarget = readdlm(path*"/2022/2022-03/2022-03-21/14/surface_tp_14_trg_p.dat")[:,1]
+  
+  TPtargets = [ [Ttarget[i];Ptarget[i];(0.5*Ttarget[i]-0.12)] for i=1:length(Ttarget) ]
+
+  Ntargets = length(Ttarget)
+  println("Number of targets = $(Ntargets)")
+
+  x = TPtargets;
+  open(newdir_nrun*"/torus_err_const_$(nrun[1])_trg_xyz.dat","w") do io
+    writedlm(io,x)
+  end
+
+  # Nvec = 64:10:404
+  # Nvec = 64:10:304
+  # Nvec = 64:10:264
+  # Nvec = 64:8:400
+  # Nvec = 64:8:300
+  # Nvec = [40;64;80]
+  # Nvec = [23]
+  Nvec = [20;40;80]
+  Hvec = 0.075*(2.0.^(0:-1:-2))
+  # Nvec = [25;50;100]
+  # Nvec = 64:8:248
+  # Nvec = 64:10:224
+  
+  # fε(x) = (0.30*x.^0.5)
+  # fε(x) = (2*x.^0.8)
+  fε(x) = 4x
+  # fε(x) = 2x
+  # detail = "epsl03h05"
+  # detail = "epsl2h08"
+  detail = "epsl4h"
+  # detail = "epsl2h"
+
+  nmax = length(Nvec)
+  errvec = zeros(nmax,2,3)
+  hval = zeros(nmax)
+  mval_abs = zeros(8,nmax)
+  mval_err = zeros(4,nmax)
+  surf_val= zeros(2,nmax)
+  
+  val_abs = zeros(8,Ntargets,nmax)
+  val_err = zeros(4,Ntargets,nmax)
+
+  shift=[0.026834;0.01346254;-0.06293856]
+
+  @time for i=1:nmax
+      println("\nRun $i/$nmax")
+      local h = 0.1
+      ε = 0.1
+      # @time hval[i], val_abs[:,:,i], mval_abs[:,i], surf_val[:,i], errvec[i,:,:] = PB_gen_shape_system( Nvec[i]; surfTargetXYZ=TPtargets, shift=shift, epslI=1.0, epslE=80.0, kappa_val=0.1257, fε=fε, plotting_surface=(i==0), count=i, Zlim1=-0.75, Zlim2=0.75, zcenter=zeros(3) )
+      @time hval[i], val_abs[:,:,i], mval_abs[:,i], surf_val[:,i], errvec[i,:,:] = PB_gen_shape_system( Hvec[i], Nvec[i]; surfTargetXYZ=TPtargets, shift=shift, epslI=1.0, epslE=80.0, kappa_val=0.1257, fε=fε, plotting_surface=(i==0), count=i, Zlim1=-.75, Zlim2=.75, zcenter=zeros(3), hflag=true, Jflag=true )
+      GC.gc()
+  end
+  x = detail;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_detail.dat","w") do io
+    writedlm(io,x)
+  end
+  x = hval;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_hvals.dat","w") do io
+    writedlm(io,x)
+  end
+  x = errvec;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_errvec.dat","w") do io
+    writedlm(io,x)
+  end
+  x = val_abs;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_abs.dat","w") do io
+    writedlm(io,x)
+  end
+  x = val_err;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_err.dat","w") do io
+    writedlm(io,x)
+  end
+  x = size(val_abs);
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_size.dat","w") do io
+    writedlm(io,x)
+  end
+  x = size(val_err);
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_err_size.dat","w") do io
+    writedlm(io,x)
+  end
+  x = mval_abs;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_abs_means.dat","w") do io
+    writedlm(io,x)
+  end
+  x = mval_err;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_val_err_means.dat","w") do io
+    writedlm(io,x)
+  end
+  x = surf_val;
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_surf_val.dat","w") do io
+    writedlm(io,x)
+  end
+  x = size(surf_val);
+  open(newdir_nrun*"/surf_PB_$(nrun[1])_surf_val_size.dat","w") do io
+    writedlm(io,x)
+  end
+end
+if ~false  # J=1, ε~2h test on the surfaces
+  nrunf!(nrun)
+
+  Ttarget = readdlm(path*"/2022/2022-03/2022-03-21/14/surface_tp_14_trg_t.dat")[:,1]
+  Ptarget = readdlm(path*"/2022/2022-03/2022-03-21/14/surface_tp_14_trg_p.dat")[:,1]
+  
+  TPtargets = [ [Ttarget[i];Ptarget[i];(0.5*Ttarget[i]-0.12)] for i=1:length(Ttarget) ]
+
+  Ntargets = length(Ttarget)
+  println("Number of targets = $(Ntargets)")
+
+  x = TPtargets;
+  open(newdir_nrun*"/torus_err_const_$(nrun[1])_trg_xyz.dat","w") do io
+    writedlm(io,x)
+  end
+
+  # Nvec = 64:10:404
+  # Nvec = 64:10:304
+  # Nvec = 64:10:264
+  # Nvec = 64:8:400
+  # Nvec = 64:8:300
+  # Nvec = [40;64;80]
+  # Nvec = [23]
+  Nvec = [20;40;80]
+  Hvec = 0.075*(2.0.^(0:-1:-2))
+  # Nvec = [25;50;100]
+  # Nvec = 64:8:248
+  # Nvec = 64:10:224
+  
+  # fε(x) = (0.30*x.^0.5)
+  # fε(x) = (2*x.^0.8)
+  # fε(x) = 4x
+  fε(x) = 2x
+  # detail = "epsl03h05"
+  # detail = "epsl2h08"
+  # detail = "epsl4h"
+  detail = "epsl2h"
+
+  nmax = length(Nvec)
+  errvec = zeros(nmax,2,3)
+  hval = zeros(nmax)
+  mval_abs = zeros(8,nmax)
+  mval_err = zeros(4,nmax)
+  surf_val= zeros(2,nmax)
+  
+  val_abs = zeros(8,Ntargets,nmax)
+  val_err = zeros(4,Ntargets,nmax)
+
+  shift=[0.026834;0.01346254;-0.06293856]
+
+  @time for i=1:nmax
+      println("\nRun $i/$nmax")
+      local h = 0.1
+      ε = 0.1
+      # @time hval[i], val_abs[:,:,i], mval_abs[:,i], surf_val[:,i], errvec[i,:,:] = PB_gen_shape_system( Nvec[i]; surfTargetXYZ=TPtargets, shift=shift, epslI=1.0, epslE=80.0, kappa_val=0.1257, fε=fε, plotting_surface=(i==0), count=i, Zlim1=-0.75, Zlim2=0.75, zcenter=zeros(3) )
+      @time hval[i], val_abs[:,:,i], mval_abs[:,i], surf_val[:,i], errvec[i,:,:] = PB_gen_shape_system( Hvec[i], Nvec[i]; surfTargetXYZ=TPtargets, shift=shift, epslI=1.0, epslE=80.0, kappa_val=0.1257, fε=fε, plotting_surface=(i==0), count=i, Zlim1=-.75, Zlim2=.75, zcenter=zeros(3), hflag=true, Jflag=true )
       GC.gc()
   end
   x = detail;
