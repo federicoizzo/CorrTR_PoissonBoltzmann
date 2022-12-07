@@ -1,0 +1,359 @@
+Test Kcos sphere
+
+Run 1/3
+h = 0.075, N = 32
+Computational box limits: X=[-1.65, 1.65], Y=[-1.65, 1.65], Z=[-1.65, 1.65]
+Current run: h=0.075, ε=0.15, Nepsl=5
+Number of discr. pts:
+45 x 45 x 45 = 91125
+  0.070863 seconds (2.01 M allocations: 183.869 MiB)
+CPM mapping completed; interior M=2340.
+Initialization of correction arrays completed. Number of nodes M=2340.
+  9.716012 seconds (110.72 M allocations: 10.424 GiB, 10.36% gc time)
+Correction arrays filled - nodes
+Initialization of correction arrays completed. Number of target points M_t=15.
+  0.461625 seconds (2.69 M allocations: 192.001 MiB)
+Correction arrays filled - targets
+--- Precomputations over ---
+ 12.333068 seconds (120.44 M allocations: 11.022 GiB, 8.37% gc time)
+  0.037473 seconds (419.62 k allocations: 27.170 MiB)
+Val. surface area:
+[3.178454118711572, 3.1514750507018205]
+Area: 3.141592653589793
+Vals: [3.178454118711572, 3.1514750507018205]
+Surface errors: 
+0.011733368767481213 , 0.003145664699952473
+Evaluating the potentials in IBIM (4) and CTR (4)
+  0.089929 seconds (1.73 M allocations: 182.681 MiB)
+psi values: 0.001871794504068017, -0.3183098861837907
+g1,g2 = 0.15915494309189535, -0.3183098861837907
+Avg K11, IBIM/corr: 36.69408737444887, 39.65779194733629
+Avg K22, IBIM/corr: -0.45831509964617684, -0.49496746015645754
+Avg K21, IBIM/corr: 0.007152924371453589, 0.007448354063667458
+Avg K12, IBIM/corr: 0.03024354544673878, 0.030243615468233457
+[0.03164623725197023; 0.03547696252376396; 0.003209533558383102; 0.001180273105597344]
+Average of potentials over targets:
+[36.69408737444887, -0.45831509964617684, 0.007152924371453588, 0.03024354544673878, 39.65779194733629, -0.49496746015645754, 0.0074483540636674575, 0.030243615468233457]
+=== gmres ===
+rest	iter	resnorm
+  1	  1	1.52e+01
+  1	  2	1.18e+00
+  1	  3	9.22e-02
+  1	  4	4.62e-02
+  1	  5	4.50e-02
+  1	  6	1.71e-02
+  1	  7	1.20e-03
+  1	  8	9.25e-04
+  1	  9	8.53e-04
+  1	 10	1.54e-04
+
+=== gmres ===
+rest	iter	resnorm
+  1	  1	1.52e+01
+  1	  2	1.11e+00
+  1	  3	5.95e-02
+  1	  4	4.20e-02
+  1	  5	4.10e-02
+  1	  6	7.60e-03
+  1	  7	7.22e-04
+  1	  8	6.67e-04
+  1	  9	2.86e-04
+
+Error vector (IBIM/corr):
+Solution error: [0.03341390664799255, 0.00467707334310685]
+Surface  error: [0.011733368767481213, 0.003145664699952473]
+Energy   error: [0.03336482814107097, 0.0015348896544906197]
+Gpol (IBIM/corr):
+-0.08126543690497336
+-0.07876228043271025
+Surf-area (IBIM/corr):
+3.178454118711572
+3.1514750507018205
+Run over.
+123.273657 seconds (2.46 G allocations: 263.545 GiB, 71.14% gc time)
+
+Run 2/3
+h = 0.0375, N = 64
+Computational box limits: X=[-1.425, 1.425], Y=[-1.425, 1.425], Z=[-1.425, 1.425]
+Current run: h=0.0375, ε=0.075, Nepsl=5
+Number of discr. pts:
+77 x 77 x 77 = 456533
+  0.464090 seconds (10.05 M allocations: 920.091 MiB, 10.98% gc time)
+CPM mapping completed; interior M=9160.
+Initialization of correction arrays completed. Number of nodes M=9160.
+ 34.669866 seconds (425.42 M allocations: 40.440 GiB, 10.93% gc time)
+Correction arrays filled - nodes
+Initialization of correction arrays completed. Number of target points M_t=15.
+  0.079406 seconds (1.23 M allocations: 120.835 MiB)
+Correction arrays filled - targets
+--- Precomputations over ---
+ 35.223353 seconds (436.87 M allocations: 41.476 GiB, 10.91% gc time)
+  0.133319 seconds (1.61 M allocations: 104.021 MiB)
+Val. surface area:
+[3.1502060739134845, 3.1452717120800644]
+Area: 3.141592653589793
+Vals: [3.1502060739134845, 3.1452717120800644]
+Surface errors: 
+0.0027417368428873557 , 0.0011710806893017601
+Evaluating the potentials in IBIM (4) and CTR (4)
+  0.231949 seconds (6.19 M allocations: 684.428 MiB, 64.36% gc time)
+psi values: 0.001871794504068017, -0.3183098861837907
+g1,g2 = 0.15915494309189535, -0.3183098861837907
+Avg K11, IBIM/corr: 38.03589759666541, 39.49006723948745
+Avg K22, IBIM/corr: -0.4762193056956417, -0.4944111614211904
+Avg K21, IBIM/corr: 0.007288047435091893, 0.007433504685895455
+Avg K12, IBIM/corr: 0.030183973576005878, 0.03018398490328689
+[0.015984576761694316; 0.017573551054106056; 0.0012266766470875423; 0.0006684496420124577]
+Average of potentials over targets:
+[38.03589759666541, -0.4762193056956417, 0.007288047435091892, 0.030183973576005878, 39.49006723948745, -0.4944111614211904, 0.007433504685895455, 0.03018398490328689]
+=== gmres ===
+rest	iter	resnorm
+  1	  1	3.01e+01
+  1	  2	7.28e-01
+  1	  3	5.06e-02
+  1	  4	2.63e-02
+  1	  5	2.58e-02
+  1	  6	7.74e-03
+  1	  7	1.08e-03
+  1	  8	1.01e-03
+  1	  9	7.17e-04
+  1	 10	6.95e-05
+
+=== gmres ===
+rest	iter	resnorm
+  1	  1	3.01e+01
+  1	  2	1.07e+00
+  1	  3	5.88e-02
+  1	  4	4.31e-02
+  1	  5	4.18e-02
+  1	  6	9.89e-03
+  1	  7	1.33e-03
+  1	  8	1.29e-03
+  1	  9	5.81e-04
+
+Error vector (IBIM/corr):
+Solution error: [0.017899497642213373, 0.0014914030008834256]
+Surface  error: [0.0027417368428873557, 0.0011710806893017601]
+Energy   error: [0.01757499086061308, 0.0005777132595555034]
+Gpol (IBIM/corr):
+-0.08002369924339342
+-0.07868700657413558
+Surf-area (IBIM/corr):
+3.1502060739134845
+3.1452717120800644
+Run over.
+1677.609070 seconds (36.11 G allocations: 3.811 TiB, 78.00% gc time)
+
+Run 3/3
+h = 0.01875, N = 128
+Computational box limits: X=[-1.3125, 1.3125], Y=[-1.3125, 1.3125], Z=[-1.3125, 1.3125]
+Current run: h=0.01875, ε=0.0375, Nepsl=5
+Number of discr. pts:
+141 x 141 x 141 = 2803221
+  3.289758 seconds (61.71 M allocations: 5.510 GiB, 12.62% gc time)
+CPM mapping completed; interior M=36004.
+Initialization of correction arrays completed. Number of nodes M=36004.
+141.065346 seconds (1.67 G allocations: 159.012 GiB, 10.91% gc time)
+Correction arrays filled - nodes
+Initialization of correction arrays completed. Number of target points M_t=15.
+  0.083728 seconds (1.23 M allocations: 120.855 MiB)
+Correction arrays filled - targets
+--- Precomputations over ---
+144.477855 seconds (1.74 G allocations: 164.716 GiB, 10.94% gc time)
+  0.477198 seconds (5.94 M allocations: 382.679 MiB, 7.14% gc time)
+Val. surface area:
+[3.1436315826594705, 3.1385203346242028]
+Area: 3.141592653589793
+Vals: [3.1436315826594705, 3.1385203346242028]
+Surface errors: 
+0.0006490112801058347 , 0.0009779495002573654
+Evaluating the potentials in IBIM (4) and CTR (4)
+  0.683174 seconds (24.31 M allocations: 2.627 GiB, 60.25% gc time)
+psi values: 0.001871794504068017, -0.3183098861837907
+g1,g2 = 0.15915494309189535, -0.3183098861837907
+Avg K11, IBIM/corr: 38.66191016483179, 39.37005958699764
+Avg K22, IBIM/corr: -0.48438968844715424, -0.4932519439455158
+Avg K21, IBIM/corr: 0.007345610388014427, 0.0074164413408107175
+Avg K12, IBIM/corr: 0.0301191687040487, 0.0301191700917516
+[0.008751758033030285; 0.009403506796695021; 0.00042332906665400606; 0.0005416678137918172]
+Average of potentials over targets:
+[38.66191016483179, -0.4843896884471542, 0.007345610388014427, 0.0301191687040487, 39.37005958699764, -0.4932519439455158, 0.007416441340810717, 0.0301191700917516]
+=== gmres ===
+rest	iter	resnorm
+  1	  1	5.96e+01
+  1	  2	4.99e-01
+  1	  3	3.31e-02
+  1	  4	1.67e-02
+  1	  5	1.63e-02
+  1	  6	7.69e-03
+  1	  7	6.91e-04
+
+=== gmres ===
+rest	iter	resnorm
+  1	  1	5.96e+01
+  1	  2	1.06e+00
+  1	  3	5.95e-02
+  1	  4	4.36e-02
+  1	  5	4.08e-02
+  1	  6	1.22e-02
+  1	  7	1.46e-03
+  1	  8	1.42e-03
+  1	  9	3.46e-04
+
+Error vector (IBIM/corr):
+Solution error: [0.009412294551053565, 0.0007204713457528451]
+Surface  error: [0.0006490112801058347, 0.0009779495002573654]
+Energy   error: [0.007688408355065534, 0.0004677916964728917]
+Gpol (IBIM/corr):
+-0.0792462028307705
+-0.07860478641846141
+Surf-area (IBIM/corr):
+3.1436315826594705
+3.1385203346242028
+Run over.
+23100.095525 seconds (474.95 G allocations: 49.951 TiB, 79.34% gc time)
+24901.891193 seconds (513.53 G allocations: 54.019 TiB, 79.21% gc time)
+Number of targets = 15
+
+Run 1/3
+h = 0.075, N = 20
+Computational box limits: X=[-1.6, 1.1], Y=[-1.35, 1.35], Z=[-1.2, 1.5]
+Current run: h=0.075, ε=0.3, Nepsl=9
+Number of discr. pts:
+37 x 37 x 37 = 50653
+  0.036842 seconds (1.12 M allocations: 102.748 MiB)
+CPM mapping completed; interior M=5023.
+Initialization of correction arrays completed. Number of nodes M=5023.
+ 28.992869 seconds (373.94 M allocations: 35.625 GiB, 9.41% gc time)
+Correction arrays filled - nodes
+Initialization of correction arrays completed. Number of target points M_t=15.
+  0.128201 seconds (1.87 M allocations: 184.586 MiB)
+Correction arrays filled - targets
+--- Precomputations over ---
+ 29.165997 seconds (377.05 M allocations: 35.922 GiB, 9.36% gc time)
+  0.074040 seconds (894.99 k allocations: 57.972 MiB)
+Val. surface area:
+[3.2893520995440126, 3.154198988437958]
+Area: 3.141592653589793
+Vals: [3.2893520995440126, 3.154198988437958]
+Surface errors: 
+0.04703329242426759 , 0.004012721010714184
+Evaluating the potentials in IBIM (4) and CTR (4)
+  0.041162 seconds (3.39 M allocations: 380.364 MiB)
+psi values: 0.001871794504068017, -0.3183098861837907
+g1,g2 = 0.15915494309189535, -0.3183098861837907
+Avg K11, IBIM/corr: 36.75463652960437, 39.74078801572731
+Avg K22, IBIM/corr: -0.45884258172401976, -0.49599049307312326
+Avg K21, IBIM/corr: 0.0071607748880870995, 0.007459223807130356
+Avg K12, IBIM/corr: 0.030269750641683687, 0.030269873244033407
+[0.0308817184371439; 0.034949526610223595; 0.004238151904250932; 0.0021966297351220343]
+Average of potentials over targets:
+[36.75463652960437, -0.45884258172401976, 0.0071607748880870995, 0.030269750641683687, 39.74078801572731, -0.4959904930731232, 0.007459223807130356, 0.030269873244033407]
+=== gmres ===
+rest	iter	resnorm
+  1	  1	2.23e+01
+  1	  2	2.49e+00
+  1	  3	1.90e-01
+  1	  4	1.11e-01
+  1	  5	1.09e-01
+  1	  6	3.60e-02
+  1	  7	2.55e-03
+  1	  8	1.72e-03
+  1	  9	1.66e-03
+  1	 10	5.53e-04
+  1	 11	9.30e-05
+
+=== gmres ===
+rest	iter	resnorm
+  1	  1	2.23e+01
+  1	  2	1.05e+00
+  1	  3	6.22e-02
+  1	  4	3.75e-02
+  1	  5	3.67e-02
+  1	  6	1.01e-02
+  1	  7	9.39e-04
+  1	  8	8.32e-04
+  1	  9	7.01e-04
+  1	 10	6.85e-05
+
+Error vector (IBIM/corr):
+Solution error: [0.01595410892109659, 0.008786553645231444]
+Surface  error: [0.04703329242426759, 0.004012721010714184]
+Energy   error: [0.015783402178939778, 0.0013512668023178478]
+Gpol (IBIM/corr):
+-0.07988280588897947
+-0.07874784004253904
+Surf-area (IBIM/corr):
+3.2893520995440126
+3.154198988437958
+Run over.
+573.064666 seconds (12.24 G allocations: 1.306 TiB, 75.78% gc time)
+
+Run 2/3
+h = 0.0375, N = 40
+Computational box limits: X=[-1.3, 0.8], Y=[-1.05, 1.05], Z=[-0.9, 1.2]
+Current run: h=0.0375, ε=0.15, Nepsl=9
+Number of discr. pts:
+57 x 57 x 57 = 185193
+  0.183962 seconds (4.09 M allocations: 375.420 MiB)
+CPM mapping completed; interior M=18419.
+Initialization of correction arrays completed. Number of nodes M=18419.
+106.804011 seconds (1.37 G allocations: 130.667 GiB, 10.53% gc time)
+Correction arrays filled - nodes
+Initialization of correction arrays completed. Number of target points M_t=15.
+  0.112646 seconds (1.87 M allocations: 184.592 MiB)
+Correction arrays filled - targets
+--- Precomputations over ---
+107.155552 seconds (1.38 G allocations: 131.277 GiB, 10.52% gc time)
+  0.294660 seconds (3.23 M allocations: 208.647 MiB, 11.78% gc time)
+Val. surface area:
+[3.1785341542338736, 3.14505087057351]
+Area: 3.141592653589793
+Vals: [3.1785341542338736, 3.14505087057351]
+Surface errors: 
+0.011758844865475702 , 0.001100784654485796
+Evaluating the potentials in IBIM (4) and CTR (4)
+  0.135658 seconds (12.43 M allocations: 1.366 GiB)
+psi values: 0.001871794504068017, -0.3183098861837907
+g1,g2 = 0.15915494309189535, -0.3183098861837907
+Avg K11, IBIM/corr: 37.96938108733073, 39.495350446019884
+Avg K22, IBIM/corr: -0.4754134365715094, -0.4943630631570258
+Avg K21, IBIM/corr: 0.007281293479662889, 0.0074333285460162855
+Avg K12, IBIM/corr: 0.030181846109457726, 0.030181857369495906
+[0.0167711211680779; 0.018379380462171604; 0.0011755701986037117; 0.0005693520939288743]
+Average of potentials over targets:
+[37.96938108733073, -0.4754134365715094, 0.007281293479662889, 0.030181846109457726, 39.495350446019884, -0.4943630631570257, 0.007433328546016285, 0.030181857369495906]
+=== gmres ===
+rest	iter	resnorm
+  1	  1	4.26e+01
+  1	  2	1.47e+00
+  1	  3	9.46e-02
+  1	  4	6.50e-02
+  1	  5	6.32e-02
+  1	  6	7.24e-03
+  1	  7	9.27e-04
+
+=== gmres ===
+rest	iter	resnorm
+  1	  1	4.26e+01
+  1	  2	1.00e+00
+  1	  3	5.73e-02
+  1	  4	3.89e-02
+  1	  5	3.79e-02
+  1	  6	9.09e-03
+  1	  7	1.14e-03
+  1	  8	1.06e-03
+  1	  9	8.10e-04
+
+Error vector (IBIM/corr):
+Solution error: [0.013257247266047373, 0.002192483811458238]
+Surface  error: [0.011758844865475702, 0.001100784654485796]
+Energy   error: [0.012702743683036366, 0.000454191256812702]
+Gpol (IBIM/corr):
+-0.07964053805499971
+-0.07867729260937995
+Surf-area (IBIM/corr):
+3.1785341542338736
+3.14505087057351
+Run over.
+6792.096686 seconds (125.23 G allocations: 13.339 TiB, 77.62% gc time)

@@ -96,7 +96,10 @@ function spheres_torus_test(x0vec, Rvec, R3)
   
     a = sqrt(abs(L1^2-alpha^2*L3^2))
     b = R3;
-    Torus = [ [(a+b*cos(2*tvec[i]*pi))*sin(2*tvec[j]*pi);b*sin(2*pi*tvec[i]);(a+b*cos(2*tvec[i]*pi))*cos(2*tvec[j]*pi)] for i=1:nt for j=1:nt]
+    # Torus = [ [(a+b*cos(2*tvec[i]*pi))*sin(2*tvec[j]*pi);b*sin(2*pi*tvec[i]);(a+b*cos(2*tvec[i]*pi))*cos(2*tvec[j]*pi)] for i=1:nt for j=1:nt]
+    Torus = [ [(a+b*cos(2*tvec[i]*pi))*cos(2*tvec[j]*pi);(a+b*cos(2*tvec[i]*pi))*sin(2*tvec[j]*pi);b*sin(2*pi*tvec[i])] for i=1:nt for j=1:nt]
+    pertg = [2;3;1]
+    Torus = [ x[pertg] for x in Torus ]
     # Torus = [ [b*sin(2*pi*tvec[i]);(a+b*cos(2*tvec[i]*pi))*cos(2*tvec[j]*pi);(a+b*cos(2*tvec[i]*pi))*sin(2*tvec[j]*pi)] for i=1:nt for j=1:nt]
     # Torus = [ [b*sin(2*pi*tvec[i]);(a+b*cos(2*tvec[i]*pi))*cos(2*tvec[j]*pi);(a+b*cos(2*tvec[i]*pi))*sin(2*pi*tvec[j])] for i=1:nt for j=1:nt]
   
@@ -275,6 +278,152 @@ function spheres_torus_test(x0vec, Rvec, R3)
     # plot3D(x2[1],x2[2],x2[3],"or")
     # scatter3D(x2[1].+Rvec[2]*xs, x2[2].+Rvec[2]*ys, x2[3].+Rvec[2]*zs, s=0.6, c="k")
     xlabel("x")
+    ylabel("y")
+    zlabel("z")
+end
+
+function three_spheres_torus_test(x0vec, Rvec, R3)
+  
+    delta = norm(x0vec[1].-x0vec[2])-Rvec[1]-Rvec[2];
+    if delta<0
+      @warn("Spheres intersecting")
+    end
+    L1 = Rvec[1]+R3
+    L2 = Rvec[2]+R3
+    L3 = Rvec[1]+Rvec[2]+delta
+    alpha = 0.5+(L1^2-L2^2)/(2L3^2)
+    x3 = x0vec[1].+(alpha)*(x0vec[2].-x0vec[1])
+  
+    x1 = x0vec[1]
+    x2 = x0vec[2]
+    figure(199); clf()
+    tvec = 0:0.02:1;
+    nt = length(tvec);
+    Sphere = [ [sin(tvec[i]*pi)*cos(2*pi*tvec[j]);sin(tvec[i]*pi)*sin(2*pi*tvec[j]);cos(tvec[i]*pi)] for i=1:nt for j=1:nt]
+    xs = [x[1] for x in Sphere]
+    ys = [x[2] for x in Sphere]
+    zs = [x[3] for x in Sphere]
+    plot3D(x1[1],x1[2],x1[3],"ok")
+    scatter3D(x1[1].+Rvec[1]*xs, x1[2].+Rvec[1]*ys, x1[3].+Rvec[1]*zs, s=0.6, c="k")
+    plot3D(x2[1],x2[2],x2[3],"or")
+    scatter3D(x2[1].+Rvec[2]*xs, x2[2].+Rvec[2]*ys, x2[3].+Rvec[2]*zs, s=0.6, c="k")
+    plot3D(x3[1],x3[2],x3[3],"ob")
+    
+  
+    a = sqrt(abs(L1^2-alpha^2*L3^2))
+    b = R3;
+    # Torus = [ [(a+b*cos(2*tvec[i]*pi))*sin(2*tvec[j]*pi);b*sin(2*pi*tvec[i]);(a+b*cos(2*tvec[i]*pi))*cos(2*tvec[j]*pi)] for i=1:nt for j=1:nt]
+    Torus = [ [(a+b*cos(2*tvec[i]*pi))*cos(2*tvec[j]*pi);(a+b*cos(2*tvec[i]*pi))*sin(2*tvec[j]*pi);b*sin(2*pi*tvec[i])] for i=1:nt for j=1:nt]
+    pertg = [2;3;1]
+    Torus = [ x[pertg] for x in Torus ]
+    # Torus = [ [b*sin(2*pi*tvec[i]);(a+b*cos(2*tvec[i]*pi))*cos(2*tvec[j]*pi);(a+b*cos(2*tvec[i]*pi))*sin(2*tvec[j]*pi)] for i=1:nt for j=1:nt]
+    # Torus = [ [b*sin(2*pi*tvec[i]);(a+b*cos(2*tvec[i]*pi))*cos(2*tvec[j]*pi);(a+b*cos(2*tvec[i]*pi))*sin(2*pi*tvec[j])] for i=1:nt for j=1:nt]
+  
+    # figure(200);clf()
+    # tmp1 = x1.+xshift
+    # plot3D(tmp1[1],tmp1[2],tmp1[3],"ok")
+    # plot3D([0;1],[0;0],[0;0],"-k")
+    # plot3D([0;0],[0;1],[0;0],"-k")
+    # plot3D([0;0],[0;0],[0;1],"-k")
+    # # scatter3D(tmp1[1].+Rvec[1]*xt, tmp1[2].+Rvec[1]*yt, tmp1[3].+Rvec[1]*zt, s=1, c="k")
+    # tmp2 = x2.+xshift
+    # plot3D(tmp2[1],tmp2[2],tmp2[3],"or")
+    # # scatter3D(tmp2[1].+Rvec[2]*xt, tmp2[2].+Rvec[2]*yt, tmp2[3].+Rvec[2]*zt, s=1, c="k")
+  
+    # X = tmp2
+    # println(tmp2)
+    # Y = cross(X,rand(3))
+    # X = X/norm(X); Y = Y/norm(Y);
+    # psi = asin(X[2]/sqrt(1-X[3]^2))
+    # phi = asin(Y[3]/sqrt(1-X[3]^2))
+    # theta = asin(-X[3])
+    # Rot3 = Rx(-phi)*Ry(-theta)*Rz(-psi)
+    X = x0vec[2].-x0vec[1]
+    B = X/norm(X); 
+    A = [0;1;0.]
+    a1 = dot(A,B); a2 = norm(cross(A,B))
+    G = [a1 -a2 0;a2 a1 0;0 0 1];
+    u1 = A; u2 = B-a1*A; u2 /=norm(u2); u3 = cross(B,A);
+    F = ([u1 u2 u3])
+    Rottot = F*G*inv(F)
+    Rot3 = transpose(Rottot)
+
+
+    tmp3 = Rot3*(x2.-x1)
+    # plot3D(tmp3[1],tmp3[2],tmp3[3],"sr")
+  
+    Torus2 = [ Rottot*(x).+x3 for x in Torus]
+    x4 = Rottot*[a*sin(2*tvec[1]*pi);0;a*cos(2*tvec[1]*pi)].+x3
+    sintC1 = a/norm(x4-x1); costC1 = norm(x1-x3)/norm(x4-x1); tant = sintC1/costC1
+
+    #################### plotting
+    figure(199)
+    xt = [x[1] for x in Torus2]
+    yt = [x[2] for x in Torus2]
+    zt = [x[3] for x in Torus2]
+    scatter3D(xt,yt,zt, s=1, c="b")
+
+    hcone = norm(x1-x3)
+    cone_compA = (1-2*(norm(x2-x3)>norm(x1-x2))) # 1 if cones have to be intersected, -1 if they need to be subtracted
+    Cone = cone_compA*[ [tvec[i]*hcone*tant*cos(tvec[j]*2*pi);tvec[i]*hcone*tant*sin(tvec[j]*2*pi);tvec[i]*hcone] for i=1:nt for j=1:nt ]
+    ConeA = [ Rottot*Rx(pi*0.5)*x.+x1 for x in Cone ]
+    xcA = [x[1] for x in ConeA]
+    ycA = [x[2] for x in ConeA]
+    zcA = [x[3] for x in ConeA]
+    scatter3D(xcA,ycA,zcA, s=1, c="g")
+    C3 = [ Rottot*[a*sin(2*tvec[j]*pi);0;a*cos(2*tvec[j]*pi)].+x3 for j=1:nt ]
+    xc3 = [x[1] for x in C3]
+    yc3 = [x[2] for x in C3]
+    zc3 = [x[3] for x in C3]
+    scatter3D(xc3,yc3,zc3, s=1, c="r")
+
+    hcone = norm(x2-x3)
+    sintC2 = a/norm(x4-x2); costC2 = norm(x2-x3)/norm(x4-x2); tant = sintC2/costC2
+    cone_compB = (1-2*(norm(x1-x3)>norm(x1-x2))) # 1 if cones have to be intersected, -1 if they need to be subtracted
+    Cone = cone_compB * [ [tvec[i]*hcone*tant*cos(tvec[j]*2*pi);tvec[i]*hcone*tant*sin(tvec[j]*2*pi);tvec[i]*hcone] for i=1:nt for j=1:nt ]
+    ConeB = [ Rottot*Rx(-pi*0.5)*x.+x2 for x in Cone ]
+    xcB = [x[1] for x in ConeB]
+    ycB = [x[2] for x in ConeB]
+    zcB = [x[3] for x in ConeB]
+    scatter3D(xcB,ycB,zcB, s=1, c="g")
+    C3 = [ Rottot*[a*sin(2*tvec[j]*pi);0;a*cos(2*tvec[j]*pi)].+x3 for j=1:nt ]
+    xc3 = [x[1] for x in C3]
+    yc3 = [x[2] for x in C3]
+    zc3 = [x[3] for x in C3]
+    scatter3D(xc3,yc3,zc3, s=1, c="r")
+
+    xlim([-1;1].+x3[1])
+    ylim([-1;1].+x3[2])
+    zlim([-1;1].+x3[3])
+
+    nab = 20000;
+
+    pv = [ rand(3).*[0.7;2.5;2.5].+[0.;-0.5;-0.5] for i=1:nab ]
+    
+    
+    figure(202); clf()
+    PzVecA = [ Pg_spheres(pv[i], x0vec, Rvec, R3) for i=1:nab ]
+    # return PzVecA 
+    
+    PzVec = [ (PzVecA[i])[1] for i=1:nab ]
+    PzVecS = [ (PzVecA[i])[2] for i=1:nab ]
+    xpz = [ x[1] for x in PzVec ]
+    ypz = [ x[2] for x in PzVec ]
+    zpz = [ x[3] for x in PzVec ]
+    scatter3D(xpz,ypz,zpz, s=1, c=PzVecS )
+    scatter3D(xt,yt,zt, s=0.5, c="b")
+
+    scatter3D(x1[1].+Rvec[1]*xs, x1[2].+Rvec[1]*ys, x1[3].+Rvec[1]*zs, s=0.6, c="k")
+    # plot3D(x2[1],x2[2],x2[3],"or")
+    scatter3D(x2[1].+Rvec[2]*xs, x2[2].+Rvec[2]*ys, x2[3].+Rvec[2]*zs, s=0.6, c="k")
+    # scatter3D(x1[1].+Rvec[1]*xs, x1[2].+Rvec[1]*ys, x1[3].+Rvec[1]*zs, s=0.6, c="k")
+    # plot3D(x2[1],x2[2],x2[3],"or")
+    # scatter3D(x2[1].+Rvec[2]*xs, x2[2].+Rvec[2]*ys, x2[3].+Rvec[2]*zs, s=0.6, c="k")
+    xlabel("x")
+    
+    xlim([-1;1].+x3[1])
+    ylim([-1;1].+x3[2])
+    zlim([-1;1].+x3[3])
     ylabel("y")
     zlabel("z")
 end
