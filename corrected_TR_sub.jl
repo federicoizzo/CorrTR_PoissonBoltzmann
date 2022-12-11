@@ -2202,8 +2202,21 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
     # _t is because it's for specifit targets, not for solving the general problem
     # for every target, an array of couples (α,β) is considered (initialized size M_int), corresponding to all the nodes to correct
     ab_single = [ zeros(Float64,2) for i=1:M, j=1:M_int ] # couples -1/2≦(α,β)≦1/2 for single correction
+    ab_quad = [ zeros(Float64,2) for i=1:M, j=1:M_int ] # couples -1/2≦(α,β)≦1/2 for single correction
     iv1 = [ -ones(Int64,M_int) for i=1:M ] # m-indices of the closest node needed for correction 
+    iv4 = [ -ones(Int64,4*M_int) for i=1:M ] # m-indices of the closest node needed for correction 
   
+    w_DL_single = [ -ones(Float64,M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
+    w_SL_single = [ -ones(Float64,M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
+    w_DLC_single = [ -ones(Float64,M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
+    
+    w_DL_s0_quad = [ -ones(Float64,4*M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
+    w_SL_s0_quad = [ -ones(Float64,4*M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
+    w_DLC_s0_quad = [ -ones(Float64,4*M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
+    w_DL_s1_quad = [ -ones(Float64,M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
+    w_SL_s1_quad = [ -ones(Float64,M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
+    w_DLC_s1_quad = [ -ones(Float64,M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
+    
     w_K11_single = [ -ones(Float64,M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
     w_K22_single = [ -ones(Float64,M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
     w_K21_single = [ -ones(Float64,M_int) for i=1:M ] # for every target, weights for every correction needed; 1 weight because single correction
@@ -2258,6 +2271,7 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
       tau1 = eigvecF[:,eigvp[1]]; tau1 /= norm(tau1) # normalization
       # find second principal direction by using the normal
       tau2 = cross(norm_now, tau1); tau2 /= norm(tau2)
+      # curvatures at parallel surface level
       k1_now = -eigvalF[eigvp[1]] # first eigenvalue (from the formula it comes with opposite sign)
       k2_now = -eigvalF[eigvp[2]] # second eigenvalue, second largest. If it's smaller in absolute value than 0 eigenvalue corresponding to the normal direction, still fine, still zero.
 
@@ -2269,11 +2283,31 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
       Hnow = (k1_now+k2_now)*0.5; Gnow = k1_now*k2_now # mean and Gaussian curvatures on the parallel surface
       Jac_vec[m] = 1+2*dszpt*Hnow + Gnow*dszpt^2
 
-      k1_now /= (1+dszpt*k1_now)
-      k2_now /= (1+dszpt*k2_now)
-
+      ### third order matrices and vectors
       Mmat = [k1_now 0;0 k2_now] # M matrix from (3.25) in https://arxiv.org/abs/2203.04854
-      D0(z) = [1/(1-k1_now*z) 0;0 1/(1-k2_now*z)] # matrix D_0 at the beginning of page 23
+      D0(z) = [1/(1-k1_now*z) 0;0 1/(1-k2_now*z)] # matrix D_0 at the beginning of page 23 
+      Pmat = zeros(5,5,5,3); ztemp = 0.05
+      for i=1:5
+          for j=1:5
+              for k=1:5 ### fix this projection using ds
+                  norm_now = [dot(dsignes[i1a[3].+iind,j_now,k_now],i1); dot(dsignes[i_now,j1a[3].+jind,k_now],j1);dot(dsignes[i_now,j_now,k1a[3].+kind],k1)]/h
+                  norm_now /= norm(norm_now)
+                  normal[m] = norm_now # normal found via gradient of signed distance function
+                  source[m] = [X[i_now];Y[j_now];Z[k_now]]-norm_now*dszpt
+                  ### fix here
+
+                  v = Pgammafun(Pzpt .+ [i-3;j-3;k-3]*h .+ ztemp*norm_now) # replace
+                  Pmat[i,j,k,:] = Mmat*(v-Pzpt)
+              end
+          end
+      end
+      vfxxx = cpm_fxxx(Pmat, tau1, tau2, k1_now, k2_now, h, 0.05)
+      ### end third order stuff
+
+
+      # curvatures trasformed at surface level
+      k1_now /= (1+dszpt*k1_now)
+      k2_now /= (1+dszpt*k2_now) 
 
       Nmax = Nx;
       W1 = zeros(Nmax); W2 = zeros(Nmax); W3 = zeros(Nmax)
@@ -2305,7 +2339,7 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
       e1_now .= e1[pb]; e2_now .= e2[pb]; e3_now .= e3[pb]
       t1_tmp = tau1[pf]; t2_tmp = tau2[pf]; nvec_tmp = norm_now[pf];
       
-      Amat = [t1_tmp[1] t1_tmp[2];t2_tmp[1] t2_tmp[2]] # matrix A  and vector d from (3.21)
+      Amat = [t1_tmp[1] t1_tmp[2];t2_tmp[1] t2_tmp[2]] # matrix A  and vector d from (3.21)->(3.16)
       #   dvec = [nvec_tmp[1]; nvec_tmp[2]] # not needed for single correction
       
       # a,b,c calculated with θn,ϕn angles of normal direction in 3D, because I need to calculate distance from a point to that line
