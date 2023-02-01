@@ -2771,20 +2771,20 @@ function PB_gen_shape_system_DEBUG(N;
     return h, val_abs, val_err, mval_abs, mval_err, surf_val, errvec
 end
 
-function Laplace_gen_shape_molecule_system(N;
+function Laplace_gen_shape_molecule_system(N, Xlim, Ylim, Zlim;
     w_ker::Function = Kcos, # averaging kernel
-    Xlim, Ylim, Zlim, Nx::Int64=65, h::Real=0.1, dsignes::Array{Float64,3}=zeros(4,4,4),
+    Nx::Int64=65, h::Real=0.1, dsignes::Array{Float64,3}=zeros(4,4,4),
     fε::Function=(t->2t), # function to get espilon from h,
     cf::Real=1.0,
     epslI::Real=1.0, epslE::Real=1.0, kappa_val::Real=1.0,
     plotting_surface::Bool=false, count::Int64=1
     )
 
-    tmp = readdlm("2022/1ycr.pqr")
-    nSpheres = size(tmp,1)-2;
-    x0Vec = [ tmp[i,6:8] for i=1:nSpheres]
-    RadiiVec = tmp[1:end-2,10];
-    qSpheres = tmp[1:end-2,9];
+    # tmp = readdlm("2022/1ycr.pqr")
+    # nSpheres = size(tmp,1)-2;
+    # x0Vec = [ tmp[i,6:8] for i=1:nSpheres]
+    # RadiiVec = tmp[1:end-2,10];
+    # qSpheres = tmp[1:end-2,9];
 
     # Xlim, Ylim, Zlim, Nx, h, dsignes = read_protein("2022"; scaling=2)
     ε = fε(h)*cf
@@ -2807,7 +2807,10 @@ function Laplace_gen_shape_molecule_system(N;
 
     # @time M, indIJK_to_M, indM_to_IJK, ds, normals, Jac_vec, source = genCPM_corr_molecule(dsignes, X, Y, Z, Nx, h, ε)
     # @time M, indIJK_to_M, indM_to_IJK, iv1, w_K11_single, w_K22_single, w_K21_single, normal, ds, Jac_vec, source  = genCPM_corr_PB_system_molecule(dsignes, X, Y, Z, Nx, ε, h; epsl_ratio=epsl_ratio, kappa_val=kappa_val)
-    indMt = Int.(readdlm("indices_molecule_rand_100.txt")[:,1])
+    ai = setdiff(Array{Int64,1}(1:50),41)
+    # indMt = Int.(readdlm("indices_molecule_rand_100_loose.txt")[91:100,1])
+    indMt = Int.(readdlm("indices_molecule_rand_100_tight.txt")[1:50,1])
+    Mt = length(indMt)
 
     @time M, indIJK_to_M, indM_to_IJK, iv1, w_K11_single, w_K22_single, w_K21_single, normal, ds, Jac_vec, source, iv1_t, w_DL_single, w_SL_single, w_DLC_single,
     iv4_t, w_DL_s0_quad, w_SL_s0_quad, w_DLC_s0_quad, iv3_t, dv3_t, s0_DL_t, w_DL_s1_quad, w_SL_s1_quad, w_DLC_s1_quad = genCPM_corr_PB_system_molecule(dsignes, X, Y, Z, Nx, ε, h, indMt; epsl_ratio=epsl_ratio, kappa_val=kappa_val)
@@ -2869,23 +2872,29 @@ function Laplace_gen_shape_molecule_system(N;
     resQ4 = zeros(Mt);
     resT0 = zeros(Mt);
     begin # evaluating DL with density =1, results = -1/2
-        resQ4 = DL_Q4corr_target_alt(ones(Mt); source=source, normal=normal, salvare_wo=salvare_wo, iv4=iv4_t, iv1=iv1_t, wv4_s0=w_DL_s0_quad, wv1= w_DL_s1_quad, dv3=dv3_t, s0b=s0_DL_t, h=h, iv3=iv3_t, targets=targets )
-        resQ1 = DL_Q1corr_target(ones(Mt); source=source, normal=normal, salvare_wo=salvare_wo, iv1=iv1_t, wv1= w_DL_single, h=h, targets=targets )
-        resT0 = DL_T0(ones(Mt); source=source, normal=normal, salvare_wo=salvare_wo, iv1=iv1_t, h=h, targets=targets )
+        resQ4 = DL_Q4corr_target_alt(ones(M); source=source, normal=normal, salvare_wo=salvare_wo, iv4=iv4_t, iv1=iv1_t, wv4_s0=w_DL_s0_quad, wv1= w_DL_s1_quad, dv3=dv3_t, s0b=s0_DL_t, h=h, iv3=iv3_t, targets=targets )
+        resQ1 = DL_Q1corr_target(ones(M); source=source, normal=normal, salvare_wo=salvare_wo, iv1=iv1_t, wv1= w_DL_single, h=h, targets=targets )
+        resT0 = DL_T0(ones(M); source=source, normal=normal, salvare_wo=salvare_wo, iv1=iv1_t, h=h, targets=targets )
     end
-    m1 = maximum(resQ4+0.5)
-    m2 = minimum(resQ4+0.5)
-    mmQ4 = mean(resQ4+0.5)
-    println("Q4: min=$m2, max=$m1, mean=$mmQ4")
-    m1 = maximum(resQ1+0.5)
-    m2 = minimum(resQ1+0.5)
-    mmQ1 = mean(resQ1+0.5)
-    println("Q1: min=$m2, max=$m1, mean=$mmQ1")
-    m1 = maximum(resT0+0.5)
-    m2 = minimum(resT0+0.5)
-    mmT0 = mean(resT0+0.5)
+    println("$Mt target points")
+    m1 = maximum(resT0.+0.5)
+    m2 = minimum(resT0.+0.5)
+    mmT0 = mean(resT0.+0.5)
     println("T0: min=$m2, max=$m1, mean=$mmT0")
+    m1 = maximum(resQ1.+0.5)
+    m2 = minimum(resQ1.+0.5)
+    mmQ1 = mean(resQ1.+0.5)
+    println("Q1: min=$m2, max=$m1, mean=$mmQ1")
+    m1 = maximum(resQ4.+0.5)
+    m2 = minimum(resQ4.+0.5)
+    mmQ4 = mean(resQ4.+0.5)
+    println("Q4: min=$m2, max=$m1, mean=$mmQ4")
+    
 
+    x=[ resT0, resQ1, resQ4 ]
+    open(newdir_nrun*"/moleculeLaplace_results_$(nrun[1])_$(count).dat","w") do io
+        writedlm(io,x)
+    end
     x=[ h, ε, Nvec, 2*ε/h ]
     open(newdir_nrun*"/moleculeLaplace_h_epsl_data_$(nrun[1])_$(count).dat","w") do io
         writedlm(io,x)
@@ -2896,16 +2905,18 @@ function Laplace_gen_shape_molecule_system(N;
     return resT0, resQ1, resQ4
 end
 
-farray = [(x->x)]
-carray = [5]
-Xlim, Ylim, Zlim, Nx, h, dsignes = read_protein512("2022"; scaling=0)
+# farray = [(x->x)]
+# carray = [5]
+# Xlim, Ylim, Zlim, Nx, h, dsignes = read_protein512_tight("2022"; scaling=0)
+nrunf!(nrun)
+resT0, resQ1, resQ4 = Laplace_gen_shape_molecule_system(Nx, Xlim, Ylim, Zlim; Nx=Nx, h=h, dsignes=dsignes, fε=farray[1], cf=carray[1])
 
-Laplace_gen_shape_molecule_system(Nx; # averaging kernel
-    Xlim, Ylim, Zlim, Nx=Nx, h=h, dsignes=dsignes,
-    fε=farray[1], # function to get espilon from h,
-    cf=carray[1])
+figure()
+semilogy(abs.(resT0.+0.5), "-k")
+semilogy(abs.(resQ1.+0.5), "-b")
+semilogy(abs.(resQ4.+0.5), "-r")
 
     ###
-    Gk_PB(x,y,kappa) = exp(-kappa*norm(x-y))/(4*pi*norm(x-y))
-dGkdnx(x,y,nx,kappa) = -exp(-kappa*norm(x-y))*(1+kappa*norm(x-y))*dot(x-y,nx)/(4*pi*norm(x-y)^3)
-dGkdny(x,y,ny,kappa) = exp(-kappa*norm(x-y))*(1+kappa*norm(x-y))*dot(x-y,ny)/(4*pi*norm(x-y)^3)
+#     Gk_PB(x,y,kappa) = exp(-kappa*norm(x-y))/(4*pi*norm(x-y))
+# dGkdnx(x,y,nx,kappa) = -exp(-kappa*norm(x-y))*(1+kappa*norm(x-y))*dot(x-y,nx)/(4*pi*norm(x-y)^3)
+# dGkdny(x,y,ny,kappa) = exp(-kappa*norm(x-y))*(1+kappa*norm(x-y))*dot(x-y,ny)/(4*pi*norm(x-y)^3)

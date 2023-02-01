@@ -112,7 +112,7 @@ Cfun_La(x,v) = 0.5*[v[1]*x[1]^2+2*v[2]*x[1]*x[2]+v[3]*x[2]^2; v[4]*x[2]^2+2*v[3]
 χ0_La(x,D0,Amat) = D0*Amat*x # vector
 χ1_La(x,D0,Amat,dvec,Mmat,z,v) = D0*D0*Mmat*Amat*x*dot(dvec,x)+z*D0*Cfun_La(D0*Amat*x,v) # vector
 
-ξ0_La(x,D0,Amat,Mmat) = 0.5*dot(D0*Amat*x,Mmat*D0*Amat*x) # scalar
+ξ0_La(x,D0,Amat,Mmat) = 0.5*dot(D0*Amat*x, Mmat*D0*Amat*x) # scalar
 ξ1_La(x,D0,Amat,dvec,Mmat,z,v) = dot(x,dvec)*dot(Amat*x, Mmat*D0*D0*Mmat*D0*Amat*x)+0.5*z*dot(D0*Cfun_La(D0*Amat*x,v) , Mmat*D0*Amat*x) + 0.5*z*dot(D0*Amat*x, Mmat*D0*Cfun_La(D0*Amat*x,v))+Bfun_La(D0*Amat*x,v) # scalar
 
 ψ0_La(x,D0,Amat) = norm(D0*Amat*x); # scalar
@@ -131,7 +131,125 @@ s1DL(t, D0,Amat,dvec,Mmat,z,v) = -3*ξ0_La([cos(t);sin(t)],D0,Amat,Mmat)*ψ1_La(
 s0DLC(t, D0,Amat,Mmat) = ξ0_La([cos(t);sin(t)],D0,Amat,Mmat)/ψ0_La([cos(t);sin(t)],D0,Amat)^3
 s1DLC(t, D0,Amat,dvec,Mmat,z,v) = -3*ξ0_La([cos(t);sin(t)],D0,Amat,Mmat)*ψ1_La([cos(t);sin(t)],D0,Amat,dvec,Mmat,z,v)/(ψ0_La([cos(t);sin(t)],D0,Amat)^4)+ξ1_La([cos(t);sin(t)],D0,Amat,dvec,Mmat,z,v)/(ψ0_La([cos(t);sin(t)],D0,Amat)^3)
 
+
+Bfun_Q4(x,v) = 0.5*(v[1]*x[1]^3/3+v[4]*x[2]^3/3+v[2]*x[1]^2*x[2]+v[3]*x[1]*x[2]^2)
+Cfun_Q4(x,v) = 0.5*[v[1]*x[1]^2+2*v[2]*x[1]*x[2]+v[3]*x[2]^2; v[4]*x[2]^2+2*v[3]*x[1]*x[2]+v[2]*x[1]^2]
+
+v0_Q4(x,D0,Amat) = D0*Amat*x
+v1_Q4(x,D0,Amat,dvec,Hmat,η,v) = D0*D0*Hmat*Amat*x*dot(dvec,x)+η*D0*Cfun_Q4(D0*Amat*x,v)
+
+# ell0_Q4(x,D0,Amat) = norm(v0_Q4(x,D0,Amat))
+ell0_Q4(x,D0,Amat) = norm(D0*Amat*x)
+ell1_Q4(x,D0,Amat,dvec,Hmat,z,v) = dot(D0*Amat*x,v1_Q4(x,D0,Amat,dvec,Hmat,z,v))/norm(D0*Amat*x)
+
+r0_Q4(x,D0,Amat,Hmat) = 0.5*dot(D0*Amat*x,Hmat*D0*Amat*x)
+r1_Q4(x,D0,Amat,dvec,Hmat,z,v) = dot(x,dvec)*dot(Amat*x, Hmat*D0*D0*Hmat*D0*Amat*x)+0.5*z*dot(D0*Cfun_Q4(D0*Amat*x,v) , Hmat*D0*Amat*x) + 0.5*z*dot(D0*Amat*x, Hmat*D0*Cfun_Q4(D0*Amat*x,v))+Bfun_Q4(D0*Amat*x,v)
+
+r1_Q4tilde(x,D0,Amat,dvec,Hmat,η,v) = dot(dvec,x)*dot(Amat*x, D0*Hmat*D0*D0*Hmat*Amat*x) + dot(D0*Amat*x, ([1 0;0 1]+η*Hmat*D0)*Cfun_Q4(D0*Amat*x,v)) + 0.5*η*dot(D0*Cfun_Q4(D0*Amat*x,v), Hmat*D0*Amat*x) -0.5*η*dot(D0*Amat*x, Hmat*D0*Cfun_Q4(D0*Amat*x,v)) - Bfun_Q4(D0*Amat*x,v)
+# println("r1_Q4tilde ",r1_Q4tilde([0;1.],0.1))
+# r1_Q4tilde(x) = η*dot( Dmat*Cfun(Dmat*x) , Hmat*Dmat*x)+
+secondt_const_Q4 = 0.25/pi
 # firstterm_DLC_Q4(angles_c4[i14],D0_now,Amat,Hmat)
+secondterm_SL_Q4(x,D0,Amat,dvec,Hmat,z,v) = (-ell1_Q4(x,D0,Amat,dvec,Hmat,z,v)/norm(D0*Amat*x)^2)*secondt_const_Q4
+secondterm_DLC_Q4(x,D0,Amat,dvec,Hmat,z,v) = (-3*ell1_Q4(x,D0,Amat,dvec,Hmat,z,v)*r0_Q4(x,D0,Amat,Hmat)/norm(D0*Amat*x)^4+r1_Q4(x,D0,Amat,dvec,Hmat,z,v)/norm(D0*Amat*x)^3)*secondt_const_Q4
+secondterm_DL_Q4(x,D0,Amat,dvec,Hmat,z,v) = (-3*ell1_Q4(x,D0,Amat,dvec,Hmat,z,v)*r0_Q4(x,D0,Amat,Hmat)/norm(D0*Amat*x)^4+r1_Q4tilde(x,D0,Amat,dvec,Hmat,z,v)/norm(D0*Amat*x)^3)*secondt_const_Q4
+secondterm_SL_Q4_angle(x,D0,Amat,dvec,Hmat,z,v) = secondterm_SL_Q4([cos(x);sin(x)],D0,Amat,dvec,Hmat,z,v)
+secondterm_DLC_Q4_angle(x,D0,Amat,dvec,Hmat,z,v) = secondterm_DLC_Q4([cos(x);sin(x)],D0,Amat,dvec,Hmat,z,v)
+secondterm_DL_Q4_angle(x,D0,Amat,dvec,Hmat,z,v) = secondterm_DL_Q4([cos(x);sin(x)],D0,Amat,dvec,Hmat,z,v)
+
+
+function weights2D_nonsmooth_s1_TOL(α,β; lfun::Function=(x->ones(size(x))), θ_0::Real=0.0, checking::Bool=false, TOL::Real=1e-5)
+  # function weights2D_nonsmooth(α,β; θ=0,ϕ=0, checking::Bool=false, Integr::Real=0.0)
+  α=Float64(α)
+  β=Float64(β)
+  Integr = 0.0
+  # θ = θ%π
+  # θ = abs(θ)*(abs(θ)<π*0.5) + (π-abs(θ))*(abs(θ)>π*0.5);
+  # ϕ = ϕ%(2*pi)
+  # ϕ = ϕ*(ϕ>=0) + (ϕ+2*π)*(ϕ<0);
+  # ϕ = ϕ%pi
+  # println("θ=$θ")
+  a=Float64(1.9);
+  order=8;
+
+  # s(x::Array{Float64,1},h::Float64)=sqrt(cos(θ)^2*(x[1]^2+x[2]^2)+sin(θ)^2*(sin(ϕ)*x[1]-cos(ϕ)*x[2])^2)^(-1)*(norm(x,Inf)>=abs(h*0.5-1e-12));
+  # s(x::Array{Float64,1},h::Float64)=sqrt(x[1]^2+x[2]^2)^(-1)*(norm(x,Inf)>=abs(h*0.5-1e-12));
+  g(x::Array{Float64,1})=exp(-norm(x)^order);
+  ffun(x::Array{Float64,1},h)=lfun(atan(x[2],x[1])-θ_0)*g(x)*(norm(x,Inf)>=abs(h*0.5-1e-12));
+  Hold = 0.5;
+
+  # Int1,_=quadgk(x->exp.(-x.^8),BigFloat(0.0),a; rtol=1e-12,order=order);
+  # Int1 = big(9.417426998497014880874021440506391502415192067235218146676389256935818128440567e-01);
+  # Int1 = (9.4174269984970148e-01)
+  Int1 = (0.4532012385277385389)
+  # Int2,_=quadgk(x->lfun.(x),BigFloat(0.0),2*pi; rtol=1e-12);
+  # lfun2(x) = lfun(x-θ_0)/(sqrt(cos(θ)^2 + (sin(θ)^2)*(sin(ϕ-x)^2)))
+  lfun2(x) = lfun(x-θ_0)
+
+  d = 1;
+  Int2 = 0.0;
+  m = 20;
+
+  # t=0:0.001:2*pi;
+  # lt = lfun.(t)
+  # m1 = maximum(lt)
+  # m2 = minimum(lt)
+  while d>TOL
+      # println(m)
+      Int2old = Int2
+      xtmp = (LinRange(0,2*pi,m+1))[1:m]
+      htmp = xtmp[2]-xtmp[1]
+      Int2 = htmp*sum(lfun2.(xtmp))
+      d = abs(Int2-Int2old)
+      if checking
+          println(d)
+          # figure(200);
+          # subplot(1,2,1)
+          # plot(zeros(2),[-Hold;Hold],"-k")
+          # plot([-Hold;Hold],zeros(2),"-k")
+          # subplot(1,2,2)
+          # plot(t,lt)
+          # plot(pi*0.25*ones(2),[m1;m2],"--k")
+          # plot(pi*0.5*ones(2),[m1;m2],"--k")
+          # plot(pi*ones(2),[m1;m2],"--k")
+      end
+      m *= 2
+  end
+
+  Integr = [Int1*Int2]
+
+  if checking
+      println("Ref integr: $(Integr[1])")
+      println("integral calculated, now onto weight")
+  end
+
+  Ivals1=[(0.0)];
+  d1 = 1.0
+  # TOL = 1e-12;
+  l=1;
+  # h=H[1]
+  w0 = zeros(15);
+  h = Hold;
+  while d1>TOL
+      M = Int(ceil(max(a/h-α,a/h-β)))
+      nodes = [ [(i + α)*h ; (j + β)*h] for i in -M:M for j in [-M:-1;1:M] ]
+      nodes = [ nodes; [ [(i + α)*h ; (j + β)*h] for i in [-M:-1;1:M] for j in [0] ] ]
+      nodes = nodes[norm.(nodes,2).<a]
+      Ivals1[1]=(h^2)*sum(ffun.(nodes,0.0));
+      w0[l+1]=(Integr[1]-Ivals1[1])/(h^2*g([α*h;β*h]))# + s(h)*(α<1e-15);
+      d1 = abs(w0[l]-w0[l+1])
+      if checking
+          println(d1," ",h^2*g([α*h;β*h]))
+          # println()
+          # subplot(1,2,1)
+          # plot([α*h],[β*h],"*r")
+      end
+      l+=1;
+      h*=0.5;
+  end
+  return 2*w0[l]-w0[l-1]
+end
+
 
 #########################
 ### rotations along x,y,z axes
@@ -203,6 +321,43 @@ end
 function read_protein512(dir; scaling::Int64=0)
 	# a = readdlm(dir*"/protein_d14_loose_gn256.dat");
 	a = readdlm(dir*"/protein_d14_loose_gn512.dat");
+	# computational limits
+	Xlim = a[1,3:4]
+	Ylim = a[1,5:6]
+	Zlim = a[1,7:8]
+	# grid size
+	Nx = a[2,3]
+	Ny = a[2,4]
+	Nz = a[2,5]
+	# h values
+	dx = a[3,3]
+	dy = a[3,4]
+	dz = a[3,5]
+  if (abs(dx-dy)>1e-10 || abs(dx-dz)>1e-10)
+    @warn "Loaded protein signed distance function. Nonuniform discretization" 
+  end
+	# distance function values
+	A = a[4:end,:]
+	phi=zeros(Nx, Ny, Nz);
+	for i=1:Nx
+    	phi[i,:,:]=A[1+(i-1)*Ny:Ny*i, 1:Nz];
+	end
+  permutedims!(phi, phi, [2; 1; 3])
+  if scaling==1
+    phi = phi[1:2:end,1:2:end,1:2:end]
+    dx *= 2
+    Nx = Int((Nx-1)/2+1)
+  elseif scaling==2
+    phi = phi[1:4:end,1:4:end,1:4:end]
+    dx *= 4
+    Nx = Int((Nx-1)/4+1)
+  end
+  # Array{Float64,1}(-(Nx-1)*dx/2:dx:(Nx-1)*dx/2)
+	return Xlim, Ylim, Zlim, Nx, dx, phi
+end
+function read_protein512_tight(dir; scaling::Int64=0)
+	# a = readdlm(dir*"/protein_d14_loose_gn256.dat");
+	a = readdlm(dir*"/protein_d14_tight_gn512.dat");
 	# computational limits
 	Xlim = a[1,3:4]
 	Ylim = a[1,5:6]
@@ -1038,6 +1193,70 @@ function far_outsidepoint_sphere(z,x0,R,ε)
   return norm(z-x0)>R+ε
 end
 
+
+function cpm_fxxx(Pmat, tau1, tau2, k1, k2, h, z)
+  Dx = [1/12;-2/3;0;2/3;-1/12]
+  Dxx = [-1/12;4/3;-5/2;4/3;-1/12]
+  Xx = dot(Dx,Pmat[:,3,3,1])/h
+  Xy = dot(Dx,Pmat[3,:,3,1])/h
+  Xz = dot(Dx,Pmat[3,3,:,1])/h
+
+  Yx = dot(Dx,Pmat[:,3,3,2])/h
+  Yy = dot(Dx,Pmat[3,:,3,2])/h
+  Yz = dot(Dx,Pmat[3,3,:,2])/h  
+
+  Xxx = dot(Dxx,Pmat[:,3,3,1])/(h^2)
+  Xyy = dot(Dxx,Pmat[3,:,3,1])/(h^2)
+  Xzz = dot(Dxx,Pmat[3,3,:,1])/(h^2)
+  
+  Yxx = dot(Dxx,Pmat[:,3,3,2])/(h^2)
+  Yyy = dot(Dxx,Pmat[3,:,3,2])/(h^2)
+  Yzz = dot(Dxx,Pmat[3,3,:,2])/(h^2)
+  
+  Xxy = dot(Dx, [dot(Dx,Pmat[:,1,3,1]);dot(Dx,Pmat[:,2,3,1]);dot(Dx,Pmat[:,3,3,1]);dot(Dx,Pmat[:,4,3,1]);dot(Dx,Pmat[:,5,3,1])])/(h^2)
+  Yxy = dot(Dx, [dot(Dx,Pmat[:,1,3,2]);dot(Dx,Pmat[:,2,3,2]);dot(Dx,Pmat[:,3,3,2]);dot(Dx,Pmat[:,4,3,2]);dot(Dx,Pmat[:,5,3,2])])/(h^2)
+  Xyx = dot(Dx, [dot(Dx,Pmat[1,:,3,1]);dot(Dx,Pmat[2,:,3,1]);dot(Dx,Pmat[3,:,3,1]);dot(Dx,Pmat[4,:,3,1]);dot(Dx,Pmat[5,:,3,1])])/(h^2)
+  Yyx = dot(Dx, [dot(Dx,Pmat[1,:,3,2]);dot(Dx,Pmat[2,:,3,2]);dot(Dx,Pmat[3,:,3,2]);dot(Dx,Pmat[4,:,3,2]);dot(Dx,Pmat[5,:,3,2])])/(h^2)
+  
+  Xxz = dot(Dx, [dot(Dx,Pmat[:,3,1,1]);dot(Dx,Pmat[:,3,2,1]);dot(Dx,Pmat[:,3,3,1]);dot(Dx,Pmat[:,3,4,1]);dot(Dx,Pmat[:,3,5,1])])/(h^2)
+  Yxz = dot(Dx, [dot(Dx,Pmat[:,3,1,2]);dot(Dx,Pmat[:,3,2,2]);dot(Dx,Pmat[:,3,3,2]);dot(Dx,Pmat[:,3,4,2]);dot(Dx,Pmat[:,3,5,2])])/(h^2)
+  Xzx = dot(Dx, [dot(Dx,Pmat[1,3,:,1]);dot(Dx,Pmat[2,3,:,1]);dot(Dx,Pmat[3,3,:,1]);dot(Dx,Pmat[4,3,:,1]);dot(Dx,Pmat[5,3,:,1])])/(h^2)
+  Yzx = dot(Dx, [dot(Dx,Pmat[1,3,:,2]);dot(Dx,Pmat[2,3,:,2]);dot(Dx,Pmat[3,3,:,2]);dot(Dx,Pmat[4,3,:,2]);dot(Dx,Pmat[5,3,:,2])])/(h^2)
+  
+  Xyz = dot(Dx, [dot(Dx,Pmat[3,:,1,1]);dot(Dx,Pmat[3,:,2,1]);dot(Dx,Pmat[3,:,3,1]);dot(Dx,Pmat[3,:,4,1]);dot(Dx,Pmat[3,:,5,1])])/(h^2)
+  Yyz = dot(Dx, [dot(Dx,Pmat[3,:,1,2]);dot(Dx,Pmat[3,:,2,2]);dot(Dx,Pmat[3,:,3,2]);dot(Dx,Pmat[3,:,4,2]);dot(Dx,Pmat[3,:,5,2])])/(h^2)
+  Xzy = dot(Dx, [dot(Dx,Pmat[3,1,:,1]);dot(Dx,Pmat[3,2,:,1]);dot(Dx,Pmat[3,3,:,1]);dot(Dx,Pmat[3,4,:,1]);dot(Dx,Pmat[3,5,:,1])])/(h^2)
+  Yzy = dot(Dx, [dot(Dx,Pmat[3,1,:,2]);dot(Dx,Pmat[3,2,:,2]);dot(Dx,Pmat[3,3,:,2]);dot(Dx,Pmat[3,4,:,2]);dot(Dx,Pmat[3,5,:,2])])/(h^2)
+  
+  DXvec = [Xx; Xy; Xz]; DYvec = [Yx; Yy; Yz];
+  DXmat = [Xxx Xyx Xzx;Xxy Xyy Xzy;Xxz Xyz Xzz]
+  DYmat = [Yxx Yyx Yzx;Yxy Yyy Yzy;Yxz Yyz Yzz]
+
+  Xtx = dot(DXvec, tau1);
+  Xty = dot(DXvec, tau2);
+  Ytx = dot(DYvec, tau1);
+  Yty = dot(DYvec, tau2);
+  
+  Xtxx = dot(tau1,DXmat*tau1)
+  Xtyy = dot(tau2,DXmat*tau2)
+  Ytxx = dot(tau1,DYmat*tau1)
+  Ytyy = dot(tau2,DYmat*tau2)
+
+  Xtxy = dot(tau2,DXmat*tau1)
+  Ytxy = dot(tau2,DYmat*tau1)
+  Xtyx = dot(tau1,DXmat*tau2)
+  Ytyx = dot(tau1,DYmat*tau2)
+
+  MmatX = [Xtx^2 Xtx*Ytx Xtx*Ytx Ytx^2;Xtx*Xty Xtx*Yty Xty*Ytx Ytx*Yty; Xtx*Xty Xty*Ytx Xtx*Yty Ytx*Yty; Xty^2 Xty*Yty Xty*Yty Yty^2]
+
+  bvec1 = [(1-z*k1)*Xtxx; (1-z*k1)*Xtxy; (1-z*k1)*Xtyx; (1-z*k1)*Xtyy]./z
+  bvec2 = [(1-z*k2)*Ytxx; (1-z*k2)*Ytxy; (1-z*k2)*Ytyx; (1-z*k2)*Ytyy]./z
+
+  v1 = MmatX\bvec1
+  v2 = MmatX\bvec2
+  # return [v1;v2]
+  return [v1[1];v1[2];v1[4];v2[4]]
+end
 
 #########################
 # weight computation functions
@@ -2388,7 +2607,7 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
       norm_now = [dot(dsignes[i1a[3].+iind,j_now,k_now],i1); dot(dsignes[i_now,j1a[3].+jind,k_now],j1);dot(dsignes[i_now,j_now,k1a[3].+kind],k1)]/h
       norm_now /= norm(norm_now)
       # normal[m] = norm_now # normal found via gradient of signed distance function
-      zpt = [X[i_now];Y[j_now];Z[k_now]]-norm_now*dszpt
+      zpt = zptP-norm_now*dszpt
       # zpt = source[m]
       Permzpt = zeros(3); Permzpt .= zpt;
 
@@ -2405,11 +2624,12 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
       # k1_now and k2_now are the principal curvatures on the parallel surface, and tau1, tau2 are the principal directions so that the coordinate system on the surface is (tau1, tau2, norm_now)
 
       # transform the curvatures from the parallel surface to the original surface (zero level set)
-      # k1_now /= (1+dszpt*k1_now)
-      # k2_now /= (1+dszpt*k2_now)
+      k1_now /= (1+dszpt*k1_now)
+      k2_now /= (1+dszpt*k2_now)
       # Hnow = (k1_now+k2_now)*0.5; Gnow = k1_now*k2_now # mean and Gaussian curvatures on the parallel surface
       # Jac_vec[m] = 1+2*dszpt*Hnow + Gnow*dszpt^2
 
+      Qmat = [tau1[1] tau1[2] tau1[3]; tau2[1] tau2[2] tau2[3]; norm_now[1] norm_now[2] norm_now[3]]
       ### third order matrices and vectors
       Mmat = [k1_now 0;0 k2_now] # M matrix from (3.25) in https://arxiv.org/abs/2203.04854
       D0(z) = [1/(1-k1_now*z) 0;0 1/(1-k2_now*z)] # matrix D_0 at the beginning of page 23 
@@ -2418,27 +2638,34 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
           for j=1:5
               for k=1:5 ### fix this projection using ds
                   inow1 = i_now+i-3; jnow1 = j_now+j-3; know1 = k_now+k-3;
+                  # println(inow1)
+                  # println(jnow1)
+                  # println(know1)
                   zptij = X[inow1];Y[jnow1];Z[know1];
-                  i1 = [-1/2;0;1/2];
-                  norm_now = [dot(dsignes[inow1+(-1):1,j_now,k_now],i1); dot(dsignes[i_now,jnow1+(-1):1,k_now],i1);dot(dsignes[i_now,j_now,know1+(-1):1],i1)]/h
-                  norm_now /= norm(norm_now)
-                  Pzptijk = zptij + dsignes[inow1,jnow1,know1]*norm_now;
+                  i1 = [-1;0;1]*0.5;
+                  # println(dsignes[inow1-1:inow1+1,j_now,k_now])
+                  # println(dsignes[i_now,jnow1-1:jnow1+1,k_now])
+                  # println(dsignes[i_now,j_now,know1-1:know1+1])
+                  norm_nowt = [dot(dsignes[inow1-1:inow1+1,jnow1,know1],i1); dot(dsignes[inow1,jnow1-1:jnow1+1,know1],i1);dot(dsignes[inow1,jnow1,know1-1:know1+1],i1)]
+                  norm_nowt /= norm(norm_nowt)
+                  Pzptijk = zptij .- dsignes[inow1,jnow1,know1]*norm_nowt;
                   # source[m] = [X[i_now];Y[j_now];Z[k_now]]-norm_now*dszpt
                   ### fix here
 
                   # v = Pgammafun(Pzpt .+ [i-3;j-3;k-3]*h .+ ztemp*norm_now) # replace
                   # Pmat[i,j,k,:] = Mmat*(v-Pzpt)
-                  Pmat[i,j,k,:] = Mmat*(Pzptijk-zpt)
+                  Pmat[i,j,k,:] = Qmat*(Pzptijk.-zpt)
               end
           end
       end
       vfxxx = cpm_fxxx(Pmat, tau1, tau2, k1_now, k2_now, h, dszpt)
+      # vfxxx = zeros(size(vfxxx))
       ### end third order stuff
 
 
       # curvatures trasformed at surface level
-      k1_now /= (1+dszpt*k1_now)
-      k2_now /= (1+dszpt*k2_now) 
+      # k1_now /= (1+dszpt*k1_now)
+      # k2_now /= (1+dszpt*k2_now) 
 
       Nmax = Nx;
       W1 = zeros(Nmax); W2 = zeros(Nmax); W3 = zeros(Nmax)
@@ -2471,7 +2698,7 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
       t1_tmp = tau1[pf]; t2_tmp = tau2[pf]; nvec_tmp = norm_now[pf];
       
       Amat = [t1_tmp[1] t1_tmp[2];t2_tmp[1] t2_tmp[2]] # matrix A  and vector d from (3.21)->(3.16)
-      #   dvec = [nvec_tmp[1]; nvec_tmp[2]] # not needed for single correction
+      dvec = [nvec_tmp[1]; nvec_tmp[2]] # not needed for single correction
       
       # a,b,c calculated with θn,ϕn angles of normal direction in 3D, because I need to calculate distance from a point to that line
       ac_angle = tan(theta)*cos(phi)
@@ -2483,7 +2710,8 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
       # Mx0 = Int(  round((zptPerm[3] - W3[1])/h))
       Mx0 = ([i_now;j_now;k_now])[pf[3]]
 
-      indIm = setdiff(Mx3m:Mx3p, Mx0) # range of indices in z-direction (after permutation)
+      # indIm = setdiff(Mx3m:Mx3p, Mx0) # range of indices in z-direction (after permutation)
+      indIm = Mx3m:Mx3p # range of indices in z-direction (after permutation)
       indIc = 1:length(indIm) # how many indices in total, from 1 to ...
 
       # intersection of line with planes in permutated basis
@@ -2498,7 +2726,7 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
       ab_quad[m, indIc] = [ [( Int_zpt[im][1] - ((Indint_p[im][1]-1)*h + W1[1]) )/h; ( Int_zpt[im][2] - ((Indint_p[im][2]-1)*h + W2[1]) )/h] for im in indIc ]
       
       # indices (only first two) corresponding to (actual) closest point to  to intersection
-      Indint_p_w1 = [ [Indint_p[im][1]+(tmp1[im][1]>0.5); Indint_p[im][2]+(tmp1[im][2]>0.5)] for im in indIc ]
+      Indint_p_w1 = [ [Indint_p[im][1]+(ab_quad[m, im][1]>0.5); Indint_p[im][2]+(ab_quad[m, im][2]>0.5)] for im in indIc ]
     
       # α,β for closest grid node
       ab_single[m, indIc] = [ [( Int_zpt[im][1] - ((Indint_p_w1[im][1]-1)*h + W1[1]) )/h; ( Int_zpt[im][2] - ((Indint_p_w1[im][2]-1)*h + W2[1]) )/h] for im in indIc ]
@@ -2513,7 +2741,7 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
 
       # 1D array of m-indices of valid correction points; indices given to indIJK_to_M to get m-index
       (iv1[m])[ind_check] = [ indIJK_to_M[ind_tmp[1],ind_tmp[2],ind_tmp[3]] for ind_tmp in Ind_tmp[ind_check] ]
-      (iv1[m])[length(indIc)+1] = m
+      # (iv1[m])[length(indIc)+1] = m
 
       for itmp in ind_check # indices sets which are not out of bounds
           # η = (1-2*insidepoint((Int_zpt[itmp])[pb]))*norm(Permzpt-Int_zpt[itmp]) 
@@ -2535,7 +2763,7 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
           # w21_test = w_k0_ptilde1([α;β]; lfun=(t->1/norm(D0_now*Amat*[cos(t);sin(t)])))*secondt_const*0.5*kappa_val^2
           w_SL_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->s0SL(t,D0_now,Amat)))*0.25/pi;
           w_DL_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->s0DL(t,D0_now,Amat,Mmat)))*0.25/pi;
-          w_DL_single[ m ][ itmp ] = w_DLC_single[ m ][ itmp ];
+          w_DLC_single[ m ][ itmp ] = w_DL_single[ m ][ itmp ];
 
           w_K11_single[ m ][ itmp ] = wjj_test*secondt_const*(1-epsl_ratio)
           w_K22_single[ m ][ itmp ] = wjj_test*secondt_const*(1- 1/epsl_ratio)
@@ -2551,17 +2779,17 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
           # technically useless array
           # ij0_PB_a(x,D0,Amat,Mmat)
       end
-      itmp = length(indIc)+1
-      # (eta_vec[m])[itmp] = dsignes[i0,j0,k0]
-      # η = dsignes[i0,j0,k0]
-      η = dsignes[i_now,j_now,k_now]
-      α = 0.; β = 0.;
-      D0_now = D0(η)
-      # weights for the different kernels
-      w_K11_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->i0_PB_a(t,D0_now,Amat, Mmat, epsl_ratio)))*secondt_const
-      w_K22_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->j0_PB_a(t,D0_now,Amat, Mmat, 1/epsl_ratio)))*(-secondt_const)
-      w_K21_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->1.0./ψ0_PB_a(t,D0_now,Amat)))*(secondt_const)*0.5*kappa_val^2
-
+      # itmp = length(indIc)+1
+      # # (eta_vec[m])[itmp] = dsignes[i0,j0,k0]
+      # # η = dsignes[i0,j0,k0]
+      # η = dsignes[i_now,j_now,k_now]
+      # α = 0.; β = 0.;
+      # D0_now = D0(η)
+      # # weights for the different kernels
+      # w_K11_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->i0_PB_a(t,D0_now,Amat, Mmat, epsl_ratio)))*secondt_const
+      # w_K22_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->j0_PB_a(t,D0_now,Amat, Mmat, 1/epsl_ratio)))*(-secondt_const)
+      # w_K21_single[ m ][ itmp ] = w_k0_ptilde1([α;β]; lfun=(t->1.0./ψ0_PB_a(t,D0_now,Amat)))*(secondt_const)*0.5*kappa_val^2
+      indplus = [ [0;0;0], [0;1;0], [1;1;0], [1;0;0] ]
       
       for i_4=1:4 # one at the time, bottom left, top left, top right, bottom right
         # (i,j,k) indices around the singularity point for every plane, permutated [pb] back to xyz
@@ -2587,12 +2815,17 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
 
         # quadruple correction
         w_DL_s0_quad[m][itmp] = w_k0_ptilde4( [α1, β1]; lfun=(t->s0DL(t, D0_now, Amat, Mmat)) )*0.25/pi
+        # w_DL_s0_quad[m][itmp] = weights2D_k0_quadruple_TOL( α1, β1; lfun=(t->s0DL(t, D0_now, Amat, Mmat)) )*0.25/pi
         w_DLC_s0_quad[m][itmp] = w_k0_ptilde4( [α1, β1]; lfun=(t->s0DLC(t, D0_now, Amat, Mmat)) )*0.25/pi
         w_SL_s0_quad[m][itmp] = w_k0_ptilde4( [α1, β1]; lfun=(t->s0SL(t, D0_now, Amat)) )*0.25/pi
         # single correction
-        w_DL_s1_quad[m][i4] = weights2D_k1_single_TOL( α, β; lfun=(t->s1DL(t, D0,Amat,dvec,Mmat,η,vfxxx)) )*0.25/pi
-        w_DLC_s1_quad[m][i4] = weights2D_k1_single_TOL( α, β; lfun=(t->s1DLC(t, D0,Amat,dvec,Mmat,η,vfxxx)) )*0.25/pi
-        w_SL_s1_quad[m][i4] = weights2D_k1_single_TOL( α, β; lfun=(t->s1SL(t, D0,Amat,dvec,Mmat,η,vfxxx)) )*0.25/pi
+        
+        
+        ws_1_DL = weights2D_nonsmooth_s1_TOL(α,β; lfun=(t->secondterm_DL_Q4_angle(t,D0_now,Amat,dvec, Mmat,η,vfxxx)))
+        w_DL_s1_quad[m][i4] = ws_1_DL
+        #weights2D_k1_single_TOL( α, β; lfun=(t->s1DL(t, D0_now, Amat, dvec, Mmat, η, vfxxx)) )*0.25/pi
+        w_DLC_s1_quad[m][i4] = weights2D_k1_single_TOL( α, β; lfun=(t->s1DLC(t, D0_now,Amat,dvec,Mmat,η,vfxxx)) )*0.25/pi
+        w_SL_s1_quad[m][i4] = weights2D_k1_single_TOL( α, β; lfun=(t->s1SL(t, D0_now,Amat,dvec,Mmat,η,vfxxx)) )*0.25/pi
         
         nodeab = [-α1;-β1]
         node_tmp = [ nodeab, nodeab+[0;1.], nodeab+[1;1.], nodeab+[1.;0]  ]
@@ -2602,7 +2835,7 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
         index1 = ([1;2;4;3])[(β1>0.5)+2*(α1>0.5)+1]
         set3 = setdiff(1:4,index1)
         (dv3[m])[ itmp3 ] .= dv3_tmp[set3]
-        sf_DLC = [s0DL_x(angles_c4[i14],D0_now,Amat,Hmat) for i14=1:4]
+        sf_DLC = [s0DL_x(angles_c4[i14],D0_now,Amat,Mmat)*0.25/pi for i14=1:4]
         (s0_DL[m])[ itmp3 ] .= sf_DLC[set3]
         # (s0b_SL_t[m])[ itmp3 ] .= sf_SL[set3]
         # (s0b_DLC_t[m])[ itmp3 ] .= sf_DLC[set3]
@@ -2614,6 +2847,9 @@ function genCPM_corr_PB_system_molecule(  dsignes::Array{Float64,3}, X::Array{Fl
         for i3=1:3 # one at the time, bottom left, top left, top right, bottom right
           # (i,j,k) indices around the singularity point for every plane, permutated [pb] back to xyz
           itmp3b = set3[i3]
+          # println(itmp3b)
+          # println(size(Indint_p)," , ",i4)
+          # println(Indint_p[i4]," , ",indplus[itmp3b])
           Ind_tmp3 = (Indint_p[i4]+indplus[itmp3b])[pb]
           # checking that the point in question is inside the bounds
           # ind_check_3 = (prod((Ind_tmp3.<=Nvec).&((Ind_tmp3.>=1)))>0)*i4
